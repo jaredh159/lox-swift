@@ -8,13 +8,8 @@ let package = Package(
   dependencies: [
   ],
   targets: [
-    .executableTarget(
-      name: "LoxSwift",
-      dependencies: []
-    ),
-    .testTarget(
-      name: "LoxSwiftTests",
-      dependencies: ["LoxSwift"]
-    ),
+    .executableTarget(name: "LoxSwift", dependencies: ["LoxScanner"]),
+    .target(name: "LoxScanner", dependencies: []),
+    .testTarget(name: "LoxSwiftTests", dependencies: ["LoxSwift"]),
   ]
 )

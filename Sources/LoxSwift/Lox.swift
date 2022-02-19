@@ -1,23 +1,29 @@
 import Darwin
 import Foundation
+import LoxScanner
 
-struct Lox {
-  enum Error: Swift.Error {
-    case noFileAtPath(String)
-  }
-
-  func main(args: [String]) throws {
-    if args.count > 1 {
-      print("Usage: lox [script]")
-      exit(64)
-    } else if args.count == 1 {
-      try runFile(path: args[0])
-    } else {
-      try runPrompt()
+@main enum Lox {
+  static func main() {
+    do {
+      let args = Array(CommandLine.arguments.dropFirst())
+      if args.count > 1 {
+        print("Usage: lox [script]")
+        exit(.errUsage)
+      } else if args.count == 1 {
+        try runFile(path: args[0])
+      } else {
+        try runPrompt()
+      }
+    } catch {
+      print("ERROR -- \(error.localizedDescription)")
+      if let loxError = error as? Lox.Error {
+        exit(loxError.exitCode)
+      }
+      exit(.err)
     }
   }
 
-  func runFile(path: String) throws {
+  static func runFile(path: String) throws {
     guard FileManager.default.fileExists(atPath: path) else {
       throw Error.noFileAtPath(path)
     }
@@ -26,7 +32,7 @@ struct Lox {
     try run(source: fileContents)
   }
 
-  func runPrompt() throws {
+  static func runPrompt() throws {
     repeat {
       print("> ", terminator: "")
       guard let line = readLine() else { break }
@@ -34,16 +40,45 @@ struct Lox {
     } while true
   }
 
-  func run(source: String) throws {
-    print("Run source:\n\n\(source)")
+  static func run(source: String) throws {
+    // for now, just print the tokens
+    Scanner(source: source).tokens().forEach { token in
+      print("TOKEN: \(token)")
+    }
+  }
+
+  static func exit(_ code: ExitCode) -> Never {
+    Darwin.exit(code.rawValue)
+  }
+}
+
+// extensions
+
+extension Lox {
+  enum Error: Swift.Error {
+    case noFileAtPath(String)
+  }
+
+  enum ExitCode: Int32 {
+    case success = 0
+    case err = 1
+    case errUsage = 64
+    case errNoInput = 66
   }
 }
 
 extension Lox.Error: LocalizedError {
   var errorDescription: String? {
     switch self {
-    case let .noFileAtPath(path):
+    case .noFileAtPath(let path):
       return "No file at path: \(path)"
+    }
+  }
+
+  var exitCode: Lox.ExitCode {
+    switch self {
+    case .noFileAtPath:
+      return .errNoInput
     }
   }
 }
