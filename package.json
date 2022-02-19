@@ -1,0 +1,14 @@
+{
+  "name": "loxswift",
+  "version": "1.0.0",
+  "description": "Lox interpreter in Swift",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "start": "watchexec --restart --watch Sources --exts swift --signal SIGINT swift build",
+    "start:tests": "watchexec --restart --watch Sources --watch Tests --exts swift --signal SIGINT swift test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}
