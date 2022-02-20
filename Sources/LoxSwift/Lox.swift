@@ -3,6 +3,8 @@ import Foundation
 import LoxScanner
 
 @main enum Lox {
+  static var hadError = false
+
   static func main() {
     do {
       let args = Array(CommandLine.arguments.dropFirst())
@@ -12,7 +14,7 @@ import LoxScanner
       } else if args.count == 1 {
         try runFile(path: args[0])
       } else {
-        try runPrompt()
+        runPrompt()
       }
     } catch {
       print("ERROR -- \(error.localizedDescription)")
@@ -23,31 +25,41 @@ import LoxScanner
     }
   }
 
-  static func runFile(path: String) throws {
+  private static func runFile(path: String) throws {
     guard FileManager.default.fileExists(atPath: path) else {
       throw Error.noFileAtPath(path)
     }
     let data = try Data(contentsOf: URL(fileURLWithPath: path))
     let fileContents = String(data: data, encoding: .utf8)!
-    try run(source: fileContents)
+    run(source: fileContents)
+    if hadError { exit(.errInput) }
   }
 
-  static func runPrompt() throws {
+  private static func runPrompt() {
     repeat {
       print("> ", terminator: "")
       guard let line = readLine() else { break }
-      try run(source: line)
+      run(source: line)
     } while true
   }
 
-  static func run(source: String) throws {
+  private static func run(source: String) {
     // for now, just print the tokens
     Scanner(source: source).tokens().forEach { token in
       print("TOKEN: \(token)")
     }
   }
 
-  static func exit(_ code: ExitCode) -> Never {
+  private static func error(line: Int, _ message: String) {
+    report(line: line, where: "", message)
+  }
+
+  private static func report(line: Int, where: String, _ message: String) {
+    fputs("[line \(line)] Error\(`where`): \(message)\n", stderr)
+    hadError = true
+  }
+
+  private static func exit(_ code: ExitCode) -> Never {
     Darwin.exit(code.rawValue)
   }
 }
@@ -63,6 +75,7 @@ extension Lox {
     case success = 0
     case err = 1
     case errUsage = 64
+    case errInput = 65
     case errNoInput = 66
   }
 }
