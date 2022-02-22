@@ -6,10 +6,12 @@ import PackageDescription
 let package = Package(
   name: "LoxSwift",
   dependencies: [
+    .package(url: "https://github.com/onevcat/Rainbow", from: "4.0.0"),
   ],
   targets: [
     .executableTarget(name: "LoxSwift", dependencies: ["LoxScanner"]),
-    .target(name: "LoxScanner", dependencies: []),
+    .target(name: "LoxScanner", dependencies: ["Rainbow"]),
+    .testTarget(name: "LoxScannerTests", dependencies: ["LoxScanner"]),
     .testTarget(name: "LoxSwiftTests", dependencies: ["LoxSwift"]),
   ]
 )

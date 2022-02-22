@@ -37,20 +37,25 @@ import LoxScanner
 
   private static func runPrompt() {
     repeat {
-      print("> ", terminator: "")
-      guard let line = readLine() else { break }
+      print("> ".dim, terminator: "")
+      guard let line = readLine(), line != ".exit" else {
+        print("Bye!")
+        exit(.success)
+      }
       run(source: line)
+      hadError = false
     } while true
   }
 
   private static func run(source: String) {
+    let scanner = Scanner(source: source, onError: Lox.error)
     // for now, just print the tokens
-    Scanner(source: source).tokens().forEach { token in
-      print("TOKEN: \(token)")
+    scanner.getTokens().forEach { token in
+      token.print()
     }
   }
 
-  private static func error(line: Int, _ message: String) {
+  public static func error(line: Int, _ message: String) {
     report(line: line, where: "", message)
   }
 
