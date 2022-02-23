@@ -61,7 +61,6 @@ public enum Token: Equatable {
 
   // special
   case eof(Meta)
-  case illegal(Meta)
 }
 
 extension Token: CustomStringConvertible {
@@ -110,8 +109,7 @@ extension Token: CustomStringConvertible {
          .true(let meta),
          .var(let meta),
          .while(let meta),
-         .eof(let meta),
-         .illegal(let meta):
+         .eof(let meta):
       return meta
     }
   }
@@ -194,8 +192,6 @@ extension Token: CustomStringConvertible {
       return "VAR"
     case .while:
       return "WHILE"
-    case .illegal:
-      return "ILLEGAL"
     case .eof:
       return "EOF"
     }

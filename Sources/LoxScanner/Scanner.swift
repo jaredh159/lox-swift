@@ -18,7 +18,6 @@ public class Scanner {
   private func scanTokens() -> [Token] {
     while let token = nextToken() {
       tokens.append(token)
-      start = current
     }
 
     tokens.append(.eof(.init(lexeme: "", offset: current)))
@@ -26,8 +25,9 @@ public class Scanner {
   }
 
   private func nextToken() -> Token? {
-    let c = advance()
-    switch c {
+    start = current
+
+    switch advance() {
     case nil: return nil
     case "(": return .leftParen(meta)
     case ")": return .rightParen(meta)
@@ -39,9 +39,20 @@ public class Scanner {
     case "+": return .plus(meta)
     case ";": return .semicolon(meta)
     case "*": return .star(meta)
+    case "!": return advance(if: "=") ? .bangEqual(meta) : .bang(meta)
+    case "=": return advance(if: "=") ? .equalEqual(meta) : .equal(meta)
+    case ">": return advance(if: "=") ? .greaterEqual(meta) : .greater(meta)
+    case "/":
+      if advance(if: "/") {
+        while currentChar != nil, currentChar != "\n" { advance() }
+        advance(if: "\n")
+        return nextToken()
+      } else {
+        return .slash(meta)
+      }
     default:
       reportError(currentLine, "Unexpected character.")
-      return .illegal(meta)
+      return nextToken()
     }
   }
 
@@ -51,6 +62,7 @@ public class Scanner {
     return currentChar
   }
 
+  @discardableResult
   private func advance(if next: Character) -> Bool {
     guard currentChar == next else { return false }
     advance()
@@ -78,7 +90,7 @@ public class Scanner {
   private var meta: Token.Meta {
     Token.Meta(
       lexeme: String(source[nthIndex(offsetBy: start) ..< currentIndex]),
-      offset: current - 1
+      offset: current
     )
   }
 
