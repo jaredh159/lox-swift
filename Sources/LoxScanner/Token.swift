@@ -3,13 +3,13 @@ import Rainbow
 public enum Token: Equatable {
   public struct Meta: Equatable {
     let lexeme: String
-    let offset: Int
-    let trivia: String?
+    let line: Int
+    let column: Int
 
-    public init(lexeme: String, offset: Int, trivia: String? = nil) {
+    public init(lexeme: String, line: Int, column: Int) {
       self.lexeme = lexeme
-      self.offset = offset
-      self.trivia = trivia
+      self.line = line
+      self.column = column
     }
   }
 
@@ -38,7 +38,7 @@ public enum Token: Equatable {
 
   // literals
   case identifier(Meta)
-  case string(Meta)
+  case string(Meta, String)
   case number(Meta)
 
   // keywords
@@ -91,7 +91,7 @@ extension Token: CustomStringConvertible {
          .less(let meta),
          .lessEqual(let meta),
          .identifier(let meta),
-         .string(let meta),
+         .string(let meta, _),
          .number(let meta),
          .and(let meta),
          .class(let meta),
@@ -207,7 +207,9 @@ public extension Token {
       Swift.print(", lexeme: ".dim, terminator: "")
       Swift.print(meta.lexeme.magenta, terminator: "")
     }
-    Swift.print(", offset: ".dim, terminator: "")
-    Swift.print(String(meta.offset).yellow)
+    Swift.print(", line: ".dim, terminator: "")
+    Swift.print(String(meta.line).yellow, terminator: "")
+    Swift.print(", column: ".dim, terminator: "")
+    Swift.print(String(meta.column).yellow)
   }
 }

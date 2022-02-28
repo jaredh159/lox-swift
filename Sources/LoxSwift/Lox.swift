@@ -48,19 +48,19 @@ import LoxScanner
   }
 
   private static func run(source: String) {
-    let scanner = Scanner(source: source, onError: Lox.error)
+    let scanner = Scanner(source: source, onError: Lox.reportScannerError)
     // for now, just print the tokens
     scanner.getTokens().forEach { token in
       token.print()
     }
   }
 
-  public static func error(line: Int, _ message: String) {
-    report(line: line, where: "", message)
+  public static func reportScannerError(_ error: LoxScanner.Scanner.Error) {
+    report(error.errorDescription!)
   }
 
-  private static func report(line: Int, where: String, _ message: String) {
-    fputs("[line \(line)] Error\(`where`): \(message)\n", stderr)
+  private static func report(_ message: String) {
+    fputs("\(message)\n", stderr)
     hadError = true
   }
 
