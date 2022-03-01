@@ -39,7 +39,7 @@ public enum Token: Equatable {
   // literals
   case identifier(Meta)
   case string(Meta, String)
-  case number(Meta)
+  case number(Meta, Double)
 
   // keywords
   case and(Meta)
@@ -92,7 +92,7 @@ extension Token: CustomStringConvertible {
          .lessEqual(let meta),
          .identifier(let meta),
          .string(let meta, _),
-         .number(let meta),
+         .number(let meta, _),
          .and(let meta),
          .class(let meta),
          .else(let meta),

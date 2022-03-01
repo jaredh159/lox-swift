@@ -42,6 +42,8 @@ public class Scanner {
     case ">": return advance(if: "=") ? .greaterEqual(meta) : .greater(meta)
     case "/": return consumeComment() ? nextToken() : .slash(meta)
     case "\"": return string() ?? nextToken()
+    case let ch where isDigit(ch): return number()
+    case let ch where isAlpha(ch): return identifier()
     case " ",
          "\r",
          "\t",
@@ -76,6 +78,10 @@ public class Scanner {
     while !chars.contains(currentChar) { advance() }
   }
 
+  private func advance(while predicate: (Character?) -> Bool) {
+    while predicate(currentChar) { advance() }
+  }
+
   private func string() -> Token? {
     advance(until: "\"", "\n")
     guard !isAtEnd, currentChar != "\n" else {
@@ -86,6 +92,58 @@ public class Scanner {
     advance() // consume the closing "
     let value = String(source[nthIndex(offsetBy: start + 1) ..< nthIndex(offsetBy: current - 1)])
     return .string(meta, value)
+  }
+
+  private func number() -> Token {
+    advance(while: isDigit)
+    if currentChar == ".", isDigit(nextChar) {
+      advance() // consume .
+      advance(while: isDigit)
+    }
+    let tokenMeta = meta
+    let value = Double(tokenMeta.lexeme)!
+    return .number(meta, value)
+  }
+
+  private func identifier() -> Token {
+    advance(while: isAlphaNumeric)
+    let tokenMeta = meta
+    switch tokenMeta.lexeme {
+    case "and":
+      return .and(tokenMeta)
+    case "class":
+      return .class(tokenMeta)
+    case "else":
+      return .else(tokenMeta)
+    case "false":
+      return .false(tokenMeta)
+    case "for":
+      return .for(tokenMeta)
+    case "fun":
+      return .fun(tokenMeta)
+    case "if":
+      return .if(tokenMeta)
+    case "nil":
+      return .nil(tokenMeta)
+    case "or":
+      return .or(tokenMeta)
+    case "print":
+      return .print(tokenMeta)
+    case "return":
+      return .return(tokenMeta)
+    case "super":
+      return .super(tokenMeta)
+    case "this":
+      return .this(tokenMeta)
+    case "true":
+      return .true(tokenMeta)
+    case "var":
+      return .var(tokenMeta)
+    case "while":
+      return .while(tokenMeta)
+    default:
+      return .identifier(meta)
+    }
   }
 
   private func consumeComment() -> Bool {
@@ -111,8 +169,14 @@ public class Scanner {
   }
 
   private var currentChar: Character? {
-    if isAtEnd { return nil }
+    guard !isAtEnd else { return nil }
     return source[currentIndex]
+  }
+
+  private var nextChar: Character? {
+    let nextIndex = nthIndex(offsetBy: current + 1)
+    guard source.indices.contains(nextIndex) else { return nil }
+    return source[nextIndex]
   }
 
   private var meta: Token.Meta {
@@ -153,4 +217,28 @@ extension Scanner.Error: LocalizedError {
       return "[\(line):\(column)] Error: Unterminated string"
     }
   }
+}
+
+private let ASCII_0 = Character("0").asciiValue!
+private let ASCII_9 = Character("9").asciiValue!
+private let ASCII_a = Character("a").asciiValue!
+private let ASCII_A = Character("A").asciiValue!
+private let ASCII_z = Character("z").asciiValue!
+private let ASCII_Z = Character("Z").asciiValue!
+private let ASCII_UNDERSCORE = Character("_").asciiValue!
+
+private func isDigit(_ ch: Character?) -> Bool {
+  guard let asciiValue = ch?.asciiValue else { return false }
+  return asciiValue >= ASCII_0 && asciiValue <= ASCII_9
+}
+
+private func isAlpha(_ ch: Character?) -> Bool {
+  guard let asciiValue = ch?.asciiValue else { return false }
+  return (asciiValue >= ASCII_a && asciiValue <= ASCII_z) ||
+    (asciiValue >= ASCII_A && asciiValue <= ASCII_Z) ||
+    asciiValue == ASCII_UNDERSCORE
+}
+
+private func isAlphaNumeric(_ ch: Character?) -> Bool {
+  return isAlpha(ch) || isDigit(ch)
 }
