@@ -10,6 +10,8 @@ let package = Package(
   ],
   targets: [
     .executableTarget(name: "LoxSwift", dependencies: ["LoxScanner"]),
+    .executableTarget(name: "LoxCodegen", dependencies: []),
+    .target(name: "LoxAst", dependencies: ["LoxScanner"]),
     .target(name: "LoxScanner", dependencies: ["Rainbow"]),
     .testTarget(name: "LoxScannerTests", dependencies: ["LoxScanner"]),
     .testTarget(name: "LoxSwiftTests", dependencies: ["LoxSwift"]),
