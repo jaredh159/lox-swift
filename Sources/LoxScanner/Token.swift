@@ -2,9 +2,9 @@ import Rainbow
 
 public enum Token: Equatable {
   public struct Meta: Equatable {
-    let lexeme: String
-    let line: Int
-    let column: Int
+    public let lexeme: String
+    public let line: Int
+    public let column: Int
 
     public init(lexeme: String, line: Int, column: Int) {
       self.lexeme = lexeme

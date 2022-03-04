@@ -40,9 +40,9 @@ public enum Ast {
     }
 
     public struct Literal: Expr {
-      public let value: String
+      public let value: Value
 
-      public init(value: String) {
+      public init(value: Value) {
         self.value = value
       }
 
