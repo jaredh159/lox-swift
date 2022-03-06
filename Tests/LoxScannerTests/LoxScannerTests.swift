@@ -225,8 +225,8 @@ func assertToken(
   line: UInt = #line
 ) {
   XCTAssertEqual(
-    expected.typeDescription,
-    actual.typeDescription,
+    expected.type,
+    actual.type,
     "token types don't match",
     file: file,
     line: line

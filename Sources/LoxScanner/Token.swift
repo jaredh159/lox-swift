@@ -1,6 +1,8 @@
+import Foundation
 import Rainbow
 
 public enum Token: Equatable {
+
   public struct Meta: Equatable {
     public let lexeme: String
     public let line: Int
@@ -63,13 +65,16 @@ public enum Token: Equatable {
   case eof(Meta)
 }
 
+// extensions
+
 extension Token: CustomStringConvertible {
-
   public var description: String {
-    return "\(typeDescription) \(meta.lexeme)"
+    return "\(type.string) \(meta.lexeme)"
   }
+}
 
-  public var meta: Token.Meta {
+public extension Token {
+  var meta: Token.Meta {
     switch self {
     case .leftParen(let meta),
          .rightParen(let meta),
@@ -113,87 +118,135 @@ extension Token: CustomStringConvertible {
       return meta
     }
   }
+}
 
-  var typeDescription: String {
+public extension Token {
+  enum TokenType: String, Equatable {
+    case leftParen
+    case rightParen
+    case leftBrace
+    case rightBrace
+    case comma
+    case dot
+    case minus
+    case plus
+    case semicolon
+    case slash
+    case star
+    case bang
+    case bangEqual
+    case equal
+    case equalEqual
+    case greater
+    case greaterEqual
+    case less
+    case lessEqual
+    case identifier
+    case string
+    case number
+    case and
+    case `class`
+    case `else`
+    case `false`
+    case fun
+    case `for`
+    case `if`
+    case `nil`
+    case or
+    case print
+    case `return`
+    case `super`
+    case this
+    case `true`
+    case `var`
+    case `while`
+    case eof
+
+    public var string: String {
+      rawValue.shoutyCased
+    }
+  }
+
+  var type: TokenType {
     switch self {
     case .leftParen:
-      return "LEFT_PAREN"
+      return .leftParen
     case .rightParen:
-      return "RIGHT_PAREN"
+      return .rightParen
     case .leftBrace:
-      return "LEFT_BRACE"
+      return .leftBrace
     case .rightBrace:
-      return "RIGHT_BRACE"
+      return .rightBrace
     case .comma:
-      return "COMMA"
+      return .comma
     case .dot:
-      return "DOT"
+      return .dot
     case .minus:
-      return "MINUS"
+      return .minus
     case .plus:
-      return "PLUS"
+      return .plus
     case .semicolon:
-      return "SEMICOLON"
+      return .semicolon
     case .slash:
-      return "SLASH"
+      return .slash
     case .star:
-      return "STAR"
+      return .star
     case .bang:
-      return "BANG"
+      return .bang
     case .bangEqual:
-      return "BANG_EQUAL"
+      return .bangEqual
     case .equal:
-      return "EQUAL"
+      return .equal
     case .equalEqual:
-      return "EQUAL_EQUAL"
+      return .equalEqual
     case .greater:
-      return "GREATER"
+      return .greater
     case .greaterEqual:
-      return "GREATER_EQUAL"
+      return .greaterEqual
     case .less:
-      return "LESS"
+      return .less
     case .lessEqual:
-      return "LESS_EQUAL"
+      return .lessEqual
     case .identifier:
-      return "IDENTIFIER"
+      return .identifier
     case .string:
-      return "STRING"
+      return .string
     case .number:
-      return "NUMBER"
+      return .number
     case .and:
-      return "AND"
+      return .and
     case .class:
-      return "CLASS"
+      return .class
     case .else:
-      return "ELSE"
+      return .else
     case .false:
-      return "FALSE"
+      return .false
     case .fun:
-      return "FUN"
+      return .fun
     case .for:
-      return "FOR"
+      return .for
     case .if:
-      return "IF"
+      return .if
     case .nil:
-      return "NIL"
+      return .nil
     case .or:
-      return "OR"
+      return .or
     case .print:
-      return "PRINT"
+      return .print
     case .return:
-      return "RETURN"
+      return .return
     case .super:
-      return "SUPER"
+      return .super
     case .this:
-      return "THIS"
+      return .this
     case .true:
-      return "TRUE"
+      return .true
     case .var:
-      return "VAR"
+      return .var
     case .while:
-      return "WHILE"
+      return .while
     case .eof:
-      return "EOF"
+      return .eof
     }
   }
 }
@@ -202,7 +255,7 @@ public extension Token {
   func print() {
     Swift.print("Token ", terminator: "")
     Swift.print("type: ".dim, terminator: "")
-    Swift.print(typeDescription.green, terminator: "")
+    Swift.print(type.string.green, terminator: "")
     if !meta.lexeme.isEmpty {
       Swift.print(", lexeme: ".dim, terminator: "")
       Swift.print(meta.lexeme.magenta, terminator: "")
@@ -211,5 +264,26 @@ public extension Token {
     Swift.print(String(meta.line).yellow, terminator: "")
     Swift.print(", column: ".dim, terminator: "")
     Swift.print(String(meta.column).yellow)
+  }
+}
+
+private extension String {
+  private var snakeCased: String {
+    let acronymPattern = "([A-Z]+)([A-Z][a-z]|[0-9])"
+    let normalPattern = "([a-z0-9])([A-Z])"
+    return processCamelCaseRegex(pattern: acronymPattern)?
+      .processCamelCaseRegex(pattern: normalPattern)?.lowercased() ?? lowercased()
+  }
+
+  var shoutyCased: String {
+    snakeCased.uppercased()
+  }
+
+  private func processCamelCaseRegex(pattern: String) -> String? {
+    let regex = try? NSRegularExpression(pattern: pattern, options: [])
+    let range = NSRange(location: 0, length: count)
+    return regex?.stringByReplacingMatches(
+      in: self, options: [], range: range, withTemplate: "$1_$2"
+    )
   }
 }
