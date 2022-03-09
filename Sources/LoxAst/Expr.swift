@@ -6,6 +6,8 @@ public extension Ast.Expression.Literal {
   enum Value: Equatable {
     case string(String)
     case number(Double)
+    case boolean(Bool)
+    case `nil`
 
     var string: String {
       switch self {
@@ -14,6 +16,10 @@ public extension Ast.Expression.Literal {
       case .number(let num):
         return String(num)
           .replacingOccurrences(of: #"\.0+$"#, with: "", options: .regularExpression)
+      case .boolean(let bool):
+        return String(bool)
+      case .nil:
+        return "nil"
       }
     }
   }

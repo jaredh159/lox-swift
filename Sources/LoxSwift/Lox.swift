@@ -1,27 +1,39 @@
 import Darwin
 import Foundation
+import LoxAst
+import LoxParser
 import LoxScanner
 
 @main enum Lox {
+  enum PrintMode: Equatable {
+    case tokens
+    case astString
+  }
+
   static var hadError = false
+  static var printMode = PrintMode.astString
 
   static func main() {
+    var file: String?
+    let args = Array(CommandLine.arguments.dropFirst())
+    for arg in args {
+      if arg == "--tokens" || arg == "-t" {
+        printMode = .tokens
+      } else if !arg.starts(with: "-") {
+        file = arg
+      }
+    }
+
     do {
-      let args = Array(CommandLine.arguments.dropFirst())
-      if args.count > 1 {
-        print("Usage: lox [script]")
-        exit(.errUsage)
-      } else if args.count == 1 {
-        try runFile(path: args[0])
+      if let file = file {
+        try runFile(path: file)
       } else {
         runPrompt()
       }
     } catch {
-      print("ERROR -- \(error.localizedDescription)")
-      if let loxError = error as? Lox.Error {
-        exit(loxError.exitCode)
-      }
-      exit(.err)
+      let error = error as! Error
+      report(error)
+      exit(error.exitCode)
     }
   }
 
@@ -48,19 +60,31 @@ import LoxScanner
   }
 
   private static func run(source: String) {
-    let scanner = Scanner(source: source, onError: Lox.reportScannerError)
-    // for now, just print the tokens
-    scanner.getTokens().forEach { token in
-      token.print()
+    let scanner = Scanner(source: source, onError: Lox.reportScannerError(_:))
+
+    if printMode == .tokens {
+      scanner.getTokens().forEach { $0.print() }
+      return
+    }
+
+    let parser = Parser(tokens: scanner.getTokens(), onError: Lox.reportParserError(_:))
+    if hadError {
+      return
+    } else if let expression = parser.parse() {
+      Ast.PrinterVisitor().print(expression)
     }
   }
 
   public static func reportScannerError(_ error: LoxScanner.Scanner.Error) {
-    report(error.errorDescription!)
+    report(.scannerError(error))
   }
 
-  private static func report(_ message: String) {
-    fputs("\(message)\n", stderr)
+  public static func reportParserError(_ error: Parser.Error) {
+    report(.parserError(error))
+  }
+
+  private static func report(_ error: Lox.Error) {
+    fputs("\(error.description)\n", stderr)
     hadError = true
   }
 
@@ -74,6 +98,8 @@ import LoxScanner
 extension Lox {
   enum Error: Swift.Error {
     case noFileAtPath(String)
+    case scannerError(LoxScanner.Scanner.Error)
+    case parserError(Parser.Error)
   }
 
   enum ExitCode: Int32 {
@@ -86,17 +112,31 @@ extension Lox {
 }
 
 extension Lox.Error: LocalizedError {
-  var errorDescription: String? {
+  var description: String {
     switch self {
     case .noFileAtPath(let path):
       return "No file at path: \(path)"
+    case .scannerError(.unexpectedCharacter(line: let line, column: let col)):
+      return "Scanner Error: unexpected character at \(line):\(col)"
+    case .scannerError(.unterminatedString(line: let line, column: let col)):
+      return "Scanner Error: unterminated string at \(line):\(col)"
+    case .parserError(.expectedToken(let type, let line, let col)):
+      return "Parser Error: expected token \(type.string) at \(line):\(col)"
+    case .parserError(.expectedExpression(let line, let col)):
+      return "Parser Error: expected expression at \(line):\(col)"
     }
+  }
+
+  var errorDescription: String? {
+    description
   }
 
   var exitCode: Lox.ExitCode {
     switch self {
     case .noFileAtPath:
       return .errNoInput
+    case .scannerError, .parserError:
+      return .errInput
     }
   }
 }

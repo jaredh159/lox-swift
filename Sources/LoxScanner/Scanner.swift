@@ -1,7 +1,7 @@
 import Foundation
 
 public class Scanner {
-  private let reportError: (Scanner.Error) -> Void
+  private let reportError: (Error) -> Void
   private let source: Substring
   private var tokens: [Token] = []
   private var start = 0
@@ -9,7 +9,7 @@ public class Scanner {
   private var line = 1
   private var column = 1
 
-  public init(source: String, onError: @escaping (Scanner.Error) -> Void) {
+  public init(source: String, onError: @escaping (Error) -> Void) {
     self.source = source[...]
     reportError = onError
   }
@@ -205,17 +205,6 @@ public extension Scanner {
   enum Error: Swift.Error, Equatable {
     case unexpectedCharacter(line: Int, column: Int)
     case unterminatedString(line: Int, column: Int)
-  }
-}
-
-extension Scanner.Error: LocalizedError {
-  public var errorDescription: String? {
-    switch self {
-    case .unexpectedCharacter(line: let line, column: let column):
-      return "[\(line):\(column)] Error: Unexected character"
-    case .unterminatedString(line: let line, column: let column):
-      return "[\(line):\(column)] Error: Unterminated string"
-    }
   }
 }
 
