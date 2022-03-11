@@ -20,7 +20,7 @@ final class ParserTests: XCTestCase {
     let rightLit = binary.right as! E.Literal
     XCTAssertEqual(leftLit.value, .number(1))
     XCTAssertEqual(rightLit.value, .number(2))
-    XCTAssertEqual(binary.operator.type, .plus)
+    XCTAssertEqual(binary.operator.token.type, .plus)
     XCTAssertEqual(Ast.PrinterVisitor().eval(expr!), "(+ 1 2)")
   }
 }

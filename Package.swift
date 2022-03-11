@@ -14,9 +14,14 @@ let package = Package(
     .target(name: "LoxAst", dependencies: ["LoxScanner"]),
     .target(name: "LoxParser", dependencies: ["LoxScanner", "LoxAst"]),
     .target(name: "LoxScanner", dependencies: ["Rainbow"]),
+    .target(name: "LoxInterpreter", dependencies: ["LoxAst"]),
     .testTarget(name: "LoxAstTests", dependencies: ["LoxAst", "LoxScanner"]),
     .testTarget(name: "LoxScannerTests", dependencies: ["LoxScanner"]),
     .testTarget(name: "LoxSwiftTests", dependencies: ["LoxSwift"]),
     .testTarget(name: "LoxParserTests", dependencies: ["LoxScanner", "LoxAst"]),
+    .testTarget(
+      name: "LoxInterpreterTests",
+      dependencies: ["LoxInterpreter", "LoxScanner", "LoxParser"]
+    ),
   ]
 )

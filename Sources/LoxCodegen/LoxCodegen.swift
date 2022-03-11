@@ -13,10 +13,10 @@ import Foundation
 
   static func main() {
     defineAst(baseName: "Expression", types: [
-      .init("Binary", ("left", "Expr"), ("operator", "Token"), ("right", "Expr")),
+      .init("Binary", ("left", "Expr"), ("operator", "Operator"), ("right", "Expr")),
       .init("Grouping", ("expression", "Expr")),
-      .init("Literal", ("value", "Value")),
-      .init("Unary", ("operator", "Token"), ("right", "Expr")),
+      .init("Literal", ("value", "Ast.Literal")),
+      .init("Unary", ("operator", "Operator"), ("right", "Expr")),
     ])
   }
 

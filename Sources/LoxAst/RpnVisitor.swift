@@ -14,7 +14,7 @@ public extension Ast {
     public func visitBinary(_ expr: Ast.Expression.Binary) {
       expr.left.accept(visitor: self)
       expr.right.accept(visitor: self)
-      stack.append(expr.operator.meta.lexeme)
+      stack.append(expr.operator.token.meta.lexeme)
     }
 
     public func visitGrouping(_ expr: Ast.Expression.Grouping) {

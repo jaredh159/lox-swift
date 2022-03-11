@@ -13,7 +13,7 @@ public extension Ast {
     }
 
     public func visitBinary(_ expr: Ast.Expression.Binary) -> String {
-      parenthesize(name: expr.operator.meta.lexeme, expr.left, expr.right)
+      parenthesize(name: expr.operator.token.meta.lexeme, expr.left, expr.right)
     }
 
     public func visitGrouping(_ expr: Ast.Expression.Grouping) -> String {
@@ -25,7 +25,7 @@ public extension Ast {
     }
 
     public func visitUnary(_ expr: Ast.Expression.Unary) -> String {
-      parenthesize(name: expr.operator.meta.lexeme, expr.right)
+      parenthesize(name: expr.operator.token.meta.lexeme, expr.right)
     }
 
     func parenthesize(name: String, _ exprs: Expr...) -> String {

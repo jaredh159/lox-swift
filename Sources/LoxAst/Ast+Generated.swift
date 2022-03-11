@@ -13,10 +13,10 @@ public enum Ast {
   public enum Expression {
     public struct Binary: Expr {
       public let left: Expr
-      public let `operator`: Token
+      public let `operator`: Operator
       public let right: Expr
 
-      public init(left: Expr, operator: Token, right: Expr) {
+      public init(left: Expr, operator: Operator, right: Expr) {
         self.left = left
         self.operator = `operator`
         self.right = right
@@ -40,9 +40,9 @@ public enum Ast {
     }
 
     public struct Literal: Expr {
-      public let value: Value
+      public let value: Ast.Literal
 
-      public init(value: Value) {
+      public init(value: Ast.Literal) {
         self.value = value
       }
 
@@ -52,10 +52,10 @@ public enum Ast {
     }
 
     public struct Unary: Expr {
-      public let `operator`: Token
+      public let `operator`: Operator
       public let right: Expr
 
-      public init(operator: Token, right: Expr) {
+      public init(operator: Operator, right: Expr) {
         self.operator = `operator`
         self.right = right
       }
