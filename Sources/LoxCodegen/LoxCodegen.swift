@@ -13,10 +13,10 @@ import Foundation
 
   static func main() {
     defineAst(baseName: "Expression", types: [
-      .init("Binary", ("left", "Expr"), ("operator", "Operator"), ("right", "Expr")),
+      .init("Binary", ("left", "Expr"), ("operator", "Token"), ("right", "Expr")),
       .init("Grouping", ("expression", "Expr")),
       .init("Literal", ("value", "Ast.Literal")),
-      .init("Unary", ("operator", "Operator"), ("right", "Expr")),
+      .init("Unary", ("operator", "Token"), ("right", "Expr")),
     ])
   }
 
@@ -53,7 +53,7 @@ import Foundation
 
   private static func visitorFuncs(for types: [AstType]) -> String {
     return types
-      .map { "func visit\($0.name)(_ expr: Ast.Expression.\($0.name)) -> R" }
+      .map { "func visit\($0.name)(_ expr: Ast.Expression.\($0.name)) throws -> R" }
       .joined(separator: "\n  ")
   }
 
@@ -78,8 +78,8 @@ import Foundation
             \(assignments)
           }
 
-          public func accept<V: ExprVisitor>(visitor: V) -> V.R {
-            return visitor.visit\(type.name)(self)
+          public func accept<V: ExprVisitor>(visitor: V) throws -> V.R {
+            try visitor.visit\(type.name)(self)
           }
         }
     """

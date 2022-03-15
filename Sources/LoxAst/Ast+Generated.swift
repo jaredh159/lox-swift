@@ -3,27 +3,27 @@ import LoxScanner
 
 public protocol ExprVisitor {
   associatedtype R
-  func visitBinary(_ expr: Ast.Expression.Binary) -> R
-  func visitGrouping(_ expr: Ast.Expression.Grouping) -> R
-  func visitLiteral(_ expr: Ast.Expression.Literal) -> R
-  func visitUnary(_ expr: Ast.Expression.Unary) -> R
+  func visitBinary(_ expr: Ast.Expression.Binary) throws -> R
+  func visitGrouping(_ expr: Ast.Expression.Grouping) throws -> R
+  func visitLiteral(_ expr: Ast.Expression.Literal) throws -> R
+  func visitUnary(_ expr: Ast.Expression.Unary) throws -> R
 }
 
 public enum Ast {
   public enum Expression {
     public struct Binary: Expr {
       public let left: Expr
-      public let `operator`: Operator
+      public let `operator`: Token
       public let right: Expr
 
-      public init(left: Expr, operator: Operator, right: Expr) {
+      public init(left: Expr, operator: Token, right: Expr) {
         self.left = left
         self.operator = `operator`
         self.right = right
       }
 
-      public func accept<V: ExprVisitor>(visitor: V) -> V.R {
-        return visitor.visitBinary(self)
+      public func accept<V: ExprVisitor>(visitor: V) throws -> V.R {
+        try visitor.visitBinary(self)
       }
     }
 
@@ -34,8 +34,8 @@ public enum Ast {
         self.expression = expression
       }
 
-      public func accept<V: ExprVisitor>(visitor: V) -> V.R {
-        return visitor.visitGrouping(self)
+      public func accept<V: ExprVisitor>(visitor: V) throws -> V.R {
+        try visitor.visitGrouping(self)
       }
     }
 
@@ -46,22 +46,22 @@ public enum Ast {
         self.value = value
       }
 
-      public func accept<V: ExprVisitor>(visitor: V) -> V.R {
-        return visitor.visitLiteral(self)
+      public func accept<V: ExprVisitor>(visitor: V) throws -> V.R {
+        try visitor.visitLiteral(self)
       }
     }
 
     public struct Unary: Expr {
-      public let `operator`: Operator
+      public let `operator`: Token
       public let right: Expr
 
-      public init(operator: Operator, right: Expr) {
+      public init(operator: Token, right: Expr) {
         self.operator = `operator`
         self.right = right
       }
 
-      public func accept<V: ExprVisitor>(visitor: V) -> V.R {
-        return visitor.visitUnary(self)
+      public func accept<V: ExprVisitor>(visitor: V) throws -> V.R {
+        try visitor.visitUnary(self)
       }
     }
   }

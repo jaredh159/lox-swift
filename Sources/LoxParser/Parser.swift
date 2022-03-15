@@ -29,7 +29,7 @@ public class Parser {
   private func equality() throws -> Expr {
     var expr = try comparison()
     while match(any: .bangEqual, .equalEqual) {
-      let op = E.Binary.Operator(from: previous)!
+      let op = previous
       let right = try comparison()
       expr = E.Binary(left: expr, operator: op, right: right)
     }
@@ -39,7 +39,7 @@ public class Parser {
   private func comparison() throws -> Expr {
     var expr = try term()
     while match(any: .greater, .greaterEqual, .less, .lessEqual) {
-      let op = E.Binary.Operator(from: previous)!
+      let op = previous
       let right = try term()
       expr = E.Binary(left: expr, operator: op, right: right)
     }
@@ -49,7 +49,7 @@ public class Parser {
   private func term() throws -> Expr {
     var expr = try factor()
     while match(any: .minus, .plus) {
-      let op = E.Binary.Operator(from: previous)!
+      let op = previous
       let right = try factor()
       expr = E.Binary(left: expr, operator: op, right: right)
     }
@@ -59,7 +59,7 @@ public class Parser {
   private func factor() throws -> Expr {
     var expr = try unary()
     while match(any: .slash, .star) {
-      let op = E.Binary.Operator(from: previous)!
+      let op = previous
       let right = try unary()
       expr = E.Binary(left: expr, operator: op, right: right)
     }
@@ -68,7 +68,7 @@ public class Parser {
 
   private func unary() throws -> Expr {
     if match(any: .bang, .minus) {
-      let op = E.Unary.Operator(from: previous)!
+      let op = previous
       let right = try unary()
       return E.Unary(operator: op, right: right)
     }

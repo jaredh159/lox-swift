@@ -7,9 +7,15 @@ import LoxScanner
 final class ParserTests: XCTestCase {
   private typealias E = Ast.Expression
 
-  func testBinaryExpr() {
-    let scanner = Scanner(source: "1 + 2", onError: { _ in fatalError() })
-    let parser = Parser(tokens: scanner.getTokens(), onError: { _ in fatalError() })
+  func testBinaryExpr() throws {
+    let scanner = Scanner(
+      source: "1 < 2",
+      onError: { err in fatalError(err.localizedDescription) }
+    )
+    let parser = Parser(
+      tokens: scanner.getTokens(),
+      onError: { err in fatalError(err.localizedDescription) }
+    )
     let expr = parser.parse()
     XCTAssertNotNil(expr)
     XCTAssertTrue(expr is E.Binary)
@@ -20,7 +26,7 @@ final class ParserTests: XCTestCase {
     let rightLit = binary.right as! E.Literal
     XCTAssertEqual(leftLit.value, .number(1))
     XCTAssertEqual(rightLit.value, .number(2))
-    XCTAssertEqual(binary.operator.token.type, .plus)
-    XCTAssertEqual(Ast.PrinterVisitor().eval(expr!), "(+ 1 2)")
+    XCTAssertEqual(binary.operator.type, .less)
+    XCTAssertEqual(try Ast.PrinterVisitor().eval(expr!), "(< 1 2)")
   }
 }

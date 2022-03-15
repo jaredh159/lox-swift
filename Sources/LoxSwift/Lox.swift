@@ -1,17 +1,20 @@
 import Darwin
 import Foundation
 import LoxAst
+import LoxInterpreter
 import LoxParser
 import LoxScanner
 
 @main enum Lox {
-  enum PrintMode: Equatable {
+  enum EvalMode: Equatable {
+    case interpret
     case tokens
     case astString
   }
 
   static var hadError = false
-  static var printMode = PrintMode.astString
+  static var hadRuntimeError = false
+  static var printMode = EvalMode.interpret
 
   static func main() {
     var file: String?
@@ -19,6 +22,8 @@ import LoxScanner
     for arg in args {
       if arg == "--tokens" || arg == "-t" {
         printMode = .tokens
+      } else if arg == "--ast-string" || arg == "-a" {
+        printMode = .astString
       } else if !arg.starts(with: "-") {
         file = arg
       }
@@ -45,6 +50,7 @@ import LoxScanner
     let fileContents = String(data: data, encoding: .utf8)!
     run(source: fileContents)
     if hadError { exit(.errInput) }
+    if hadRuntimeError { exit(.errSoftware) }
   }
 
   private static func runPrompt() {
@@ -70,8 +76,24 @@ import LoxScanner
     let parser = Parser(tokens: scanner.getTokens(), onError: Lox.reportParserError(_:))
     if hadError {
       return
-    } else if let expression = parser.parse() {
+    }
+
+    guard let expression = parser.parse() else {
+      return
+    }
+
+    if printMode == .astString {
       Ast.PrinterVisitor().print(expression)
+      return
+    }
+
+    let result = Interpreter().interpret(expression)
+    switch result {
+    case .success(let obj):
+      print(obj.toString)
+    case .failure(let runtimeError):
+      hadRuntimeError = true
+      print(runtimeError.message)
     }
   }
 
@@ -108,6 +130,7 @@ extension Lox {
     case errUsage = 64
     case errInput = 65
     case errNoInput = 66
+    case errSoftware = 70
   }
 }
 

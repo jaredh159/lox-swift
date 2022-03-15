@@ -9,7 +9,10 @@ let package = Package(
     .package(url: "https://github.com/onevcat/Rainbow", from: "4.0.0"),
   ],
   targets: [
-    .executableTarget(name: "LoxSwift", dependencies: ["LoxScanner", "LoxParser", "LoxAst"]),
+    .executableTarget(
+      name: "LoxSwift",
+      dependencies: ["LoxScanner", "LoxParser", "LoxAst", "LoxInterpreter"]
+    ),
     .executableTarget(name: "LoxCodegen", dependencies: []),
     .target(name: "LoxAst", dependencies: ["LoxScanner"]),
     .target(name: "LoxParser", dependencies: ["LoxScanner", "LoxAst"]),

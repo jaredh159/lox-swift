@@ -40,6 +40,7 @@ public class Scanner {
     case "!": return advance(if: "=") ? .bangEqual(meta) : .bang(meta)
     case "=": return advance(if: "=") ? .equalEqual(meta) : .equal(meta)
     case ">": return advance(if: "=") ? .greaterEqual(meta) : .greater(meta)
+    case "<": return advance(if: "=") ? .lessEqual(meta) : .less(meta)
     case "/": return consumeComment() ? nextToken() : .slash(meta)
     case "\"": return string() ?? nextToken()
     case let ch where isDigit(ch): return number()
@@ -202,9 +203,18 @@ public class Scanner {
 }
 
 public extension Scanner {
-  enum Error: Swift.Error, Equatable {
+  enum Error: Swift.Error, Equatable, LocalizedError {
     case unexpectedCharacter(line: Int, column: Int)
     case unterminatedString(line: Int, column: Int)
+
+    public var errorDescription: String? {
+      switch self {
+      case .unexpectedCharacter(let line, let col):
+        return "Unexpected character at \(line):\(col)"
+      case .unterminatedString(let line, let col):
+        return "Unterminated string at \(line):\(col)"
+      }
+    }
   }
 }
 

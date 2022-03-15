@@ -2,7 +2,7 @@ import XCTest
 
 @testable import LoxScanner
 
-final class LoxScannerTests: XCTestCase {
+final class ScannerTests: XCTestCase {
   func testBasicTokens() throws {
     assertTokens(
       getTokens("(){},-.+;*!!=;==;>;>=;/"),
@@ -28,6 +28,18 @@ final class LoxScannerTests: XCTestCase {
         .semicolon(.init(lexeme: ";", line: 1, column: 22)),
         .slash(.init(lexeme: "/", line: 1, column: 23)),
         .eof(.init(lexeme: "", line: 1, column: 24)),
+      ]
+    )
+  }
+
+  func testLessThan() {
+    assertTokens(
+      getTokens("1 < 2"),
+      [
+        .number(.init(lexeme: "1", line: 1, column: 1), 1),
+        .less(.init(lexeme: "<", line: 1, column: 3)),
+        .number(.init(lexeme: "2", line: 1, column: 5), 2),
+        .eof(.init(lexeme: "", line: 1, column: 6)),
       ]
     )
   }
