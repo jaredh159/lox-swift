@@ -45,7 +45,7 @@ final class InterpreterTests: XCTestCase {
       ("3 != \"three\"", true),
     ]
     for (input, expected) in cases {
-      XCTAssertEqual(try eval(input).get(), expected)
+      XCTAssertEqual(try eval(input + ";").get(), expected)
     }
   }
 
@@ -58,7 +58,7 @@ final class InterpreterTests: XCTestCase {
       ("nil >= \"foo\"", .invalidBinaryOperands(lhs: nil, operator: .greaterEqual, rhs: "foo")),
     ]
     for (input, expected) in cases {
-      switch eval(input) {
+      switch eval(input + ";") {
       case .failure(let error):
         XCTAssertEqual(error.type, expected)
       case .success:
@@ -73,8 +73,17 @@ private func eval(_ input: String) -> Result<Object, RuntimeError> {
     source: input,
     onError: { e in fatalError(e.localizedDescription) }
   )
-  let parser = Parser(tokens: scanner.getTokens(), onError: { _ in fatalError() })
-  let expr = parser.parse()
+  let parser = Parser(
+    tokens: scanner.getTokens(),
+    onError: { err in fatalError("Interpreter tests error for input: `\(input)`, err: \(err)") }
+  )
+  let statements = parser.parse()
+  let exprStatement = statements[0] as! Ast.Statement.Expression
+  let expr = exprStatement.expression
   let interpreter = Interpreter()
-  return interpreter.interpret(expr!)
+  do {
+    return .success(try interpreter.evaluate(expr))
+  } catch {
+    return .failure(error as! RuntimeError)
+  }
 }

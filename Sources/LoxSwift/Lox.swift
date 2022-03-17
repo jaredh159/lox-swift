@@ -9,7 +9,6 @@ import LoxScanner
   enum EvalMode: Equatable {
     case interpret
     case tokens
-    case astString
   }
 
   static var hadError = false
@@ -22,8 +21,6 @@ import LoxScanner
     for arg in args {
       if arg == "--tokens" || arg == "-t" {
         printMode = .tokens
-      } else if arg == "--ast-string" || arg == "-a" {
-        printMode = .astString
       } else if !arg.starts(with: "-") {
         file = arg
       }
@@ -78,20 +75,8 @@ import LoxScanner
       return
     }
 
-    guard let expression = parser.parse() else {
-      return
-    }
-
-    if printMode == .astString {
-      Ast.PrinterVisitor().print(expression)
-      return
-    }
-
-    let result = Interpreter().interpret(expression)
-    switch result {
-    case .success(let obj):
-      print(obj.toString)
-    case .failure(let runtimeError):
+    let statements = parser.parse()
+    if let runtimeError = Interpreter().interpret(statements) {
       hadRuntimeError = true
       print(runtimeError.message)
     }

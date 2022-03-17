@@ -17,19 +17,19 @@ public extension Ast {
       }
     }
 
-    public func visitBinary(_ expr: Ast.Expression.Binary) throws -> String {
+    public func visitBinaryExpr(_ expr: Ast.Expression.Binary) throws -> String {
       try parenthesize(name: expr.operator.meta.lexeme, expr.left, expr.right)
     }
 
-    public func visitGrouping(_ expr: Ast.Expression.Grouping) throws -> String {
+    public func visitGroupingExpr(_ expr: Ast.Expression.Grouping) throws -> String {
       try parenthesize(name: "group", expr.expression)
     }
 
-    public func visitLiteral(_ expr: Ast.Expression.Literal) throws -> String {
+    public func visitLiteralExpr(_ expr: Ast.Expression.Literal) throws -> String {
       expr.value.string
     }
 
-    public func visitUnary(_ expr: Ast.Expression.Unary) throws -> String {
+    public func visitUnaryExpr(_ expr: Ast.Expression.Unary) throws -> String {
       try parenthesize(name: expr.operator.meta.lexeme, expr.right)
     }
 

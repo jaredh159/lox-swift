@@ -3,6 +3,7 @@ import LoxScanner
 
 private typealias TokenType = Token.TokenType
 private typealias E = Ast.Expression
+private typealias S = Ast.Statement
 
 public class Parser {
   private let reportError: (Error) -> Void
@@ -14,12 +15,37 @@ public class Parser {
     self.reportError = reportError
   }
 
-  public func parse() -> Expr? {
+  public func parse() -> [Stmt] {
+    var statements: [Stmt] = []
     do {
-      return try expression()
+      while !isAtEnd {
+        statements.append(try statement())
+      }
+      return statements
     } catch {
-      return nil
+      // @TODO error handling...
+      return statements
     }
+  }
+
+  private func statement() throws -> Stmt {
+    if match(.print) {
+      return try printStatement()
+    } else {
+      return try expressionStatement()
+    }
+  }
+
+  private func printStatement() throws -> Stmt {
+    let value = try expression()
+    try consume(expected: .semicolon)
+    return S.Print(expression: value)
+  }
+
+  private func expressionStatement() throws -> Stmt {
+    let expr = try expression()
+    try consume(expected: .semicolon)
+    return S.Expression(expression: expr)
   }
 
   private func expression() throws -> Expr {

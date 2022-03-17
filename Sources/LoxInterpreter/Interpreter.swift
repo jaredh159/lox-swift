@@ -1,23 +1,36 @@
 import LoxAst
 
 private typealias E = Ast.Expression
+private typealias S = Ast.Statement
 
-public class Interpreter: ExprVisitor {
+public class Interpreter: ExprVisitor, StmtVisitor {
+
   public init() {}
 
-  public func interpret(_ expr: Expr) -> Result<Object, RuntimeError> {
+  public func interpret(_ statements: [Stmt]) -> RuntimeError? {
     do {
-      return .success(try evaluate(expr))
+      try statements.forEach(execute(_:))
     } catch {
-      return .failure(error as! RuntimeError)
+      return error as? RuntimeError
     }
+    return nil
   }
 
+  @discardableResult
   public func evaluate(_ expr: Expr) throws -> Object {
     try expr.accept(visitor: self)
   }
 
-  public func visitBinary(_ expr: Ast.Expression.Binary) throws -> Object {
+  public func visitExpressionStmt(_ stmt: Ast.Statement.Expression) throws {
+    try evaluate(stmt.expression)
+  }
+
+  public func visitPrintStmt(_ stmt: Ast.Statement.Print) throws {
+    let value = try evaluate(stmt.expression)
+    print(value.toString)
+  }
+
+  public func visitBinaryExpr(_ expr: Ast.Expression.Binary) throws -> Object {
     let lhs = try evaluate(expr.left)
     let rhs = try evaluate(expr.right)
     switch (lhs, expr.operator, rhs) {
@@ -61,11 +74,11 @@ public class Interpreter: ExprVisitor {
     }
   }
 
-  public func visitGrouping(_ expr: Ast.Expression.Grouping) throws -> Object {
+  public func visitGroupingExpr(_ expr: Ast.Expression.Grouping) throws -> Object {
     try evaluate(expr.expression)
   }
 
-  public func visitLiteral(_ expr: Ast.Expression.Literal) throws -> Object {
+  public func visitLiteralExpr(_ expr: Ast.Expression.Literal) throws -> Object {
     switch expr.value {
     case .string(let str):
       return .string(str)
@@ -78,7 +91,7 @@ public class Interpreter: ExprVisitor {
     }
   }
 
-  public func visitUnary(_ expr: Ast.Expression.Unary) throws -> Object {
+  public func visitUnaryExpr(_ expr: Ast.Expression.Unary) throws -> Object {
     let right = try evaluate(expr.right)
     switch (expr.operator, right) {
     case (.minus, .number(let number)):
@@ -90,5 +103,9 @@ public class Interpreter: ExprVisitor {
     default:
       preconditionFailure()
     }
+  }
+
+  private func execute(_ statement: Stmt) throws {
+    try statement.accept(visitor: self)
   }
 }

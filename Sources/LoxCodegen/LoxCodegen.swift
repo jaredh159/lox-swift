@@ -18,6 +18,10 @@ import Foundation
       .init("Literal", ("value", "Ast.Literal")),
       .init("Unary", ("operator", "Token"), ("right", "Expr")),
     ])
+    defineAst(baseName: "Stmt", types: [
+      .init("Expression", ("expression", "Expr")),
+      .init("Print", ("expression", "Expr")),
+    ])
   }
 
   private static func defineAst(
@@ -25,7 +29,7 @@ import Foundation
     types: [AstType]
   ) {
     let cwd = FileManager.default.currentDirectoryPath
-    let path = "\(cwd)/Sources/LoxAst/Ast+Generated.swift"
+    let path = "\(cwd)/Sources/LoxAst/Ast\(baseName)+Generated.swift"
 
     let structs = types
       .map { defineType(baseName: baseName, type: $0) }
@@ -35,56 +39,59 @@ import Foundation
     // auto-generated, do not edit
     import LoxScanner
 
-    public protocol ExprVisitor {
-      associatedtype R
-      \(visitorFuncs(for: types))
+    public protocol \(proto(from: baseName))Visitor {
+      associatedtype \(visitorAssociatedType(from: baseName))
+      \(visitorFuncs(for: types, baseName: baseName))
     }
 
-    public enum Ast {
-      public enum \(baseName) {
+    public extension Ast.\(astSubType(from: baseName)) {
       \(structs)
-      }
-    }
+    } 
 
     """
 
     try! code.write(to: URL(fileURLWithPath: path), atomically: true, encoding: .utf8)
   }
 
-  private static func visitorFuncs(for types: [AstType]) -> String {
+  private static func visitorFuncs(for types: [AstType], baseName: String) -> String {
     return types
-      .map { "func visit\($0.name)(_ expr: Ast.Expression.\($0.name)) throws -> R" }
+      .map {
+        "func visit\($0.name)\(proto(from: baseName))(_ \(proto(from: baseName).lowercased()): Ast.\(astSubType(from: baseName)).\($0.name)) throws -> \(visitorAssociatedType(from: baseName))"
+      }
       .joined(separator: "\n  ")
   }
 
   private static func defineType(baseName: String, type: AstType) -> String {
+    let typeProto = proto(from: baseName)
     let assignments = type.props
       .map { name, _ in "self.\(name) = \(backtick(name))" }
-      .joined(separator: "\n        ")
+      .joined(separator: "\n      ")
 
     let propDecls = type.props
       .map { name, type in "public let \(backtick(name)): \(type)" }
-      .joined(separator: "\n      ")
+      .joined(separator: "\n    ")
 
     let initParams = type.props
       .map { name, type in "\(name): \(type)" }
       .joined(separator: ", ")
 
     return """
-      public struct \(type.name): Expr {
-          \(propDecls)
+    struct \(type.name): \(typeProto) {
+        \(propDecls)
 
-          public init(\(initParams)) {
-            \(assignments)
-          }
-
-          public func accept<V: ExprVisitor>(visitor: V) throws -> V.R {
-            try visitor.visit\(type.name)(self)
-          }
+        public init(\(initParams)) {
+          \(assignments)
         }
+
+        public func accept<V: \(typeProto)Visitor>(visitor: V) throws -> V.\(visitorAssociatedType(from: baseName)) {
+          try visitor.visit\(type.name)\(typeProto)(self)
+        }
+      }
     """
   }
 }
+
+// helper fns
 
 private func backtick(_ identifier: String) -> String {
   switch identifier {
@@ -93,4 +100,16 @@ private func backtick(_ identifier: String) -> String {
   default:
     return identifier
   }
+}
+
+private func proto(from baseName: String) -> String {
+  baseName == "Expression" ? "Expr" : "Stmt"
+}
+
+private func visitorAssociatedType(from baseName: String) -> String {
+  baseName == "Stmt" ? "SR" : "ER"
+}
+
+private func astSubType(from baseName: String) -> String {
+  baseName == "Stmt" ? "Statement" : "Expression"
 }
