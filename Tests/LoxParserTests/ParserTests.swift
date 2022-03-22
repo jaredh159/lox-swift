@@ -10,7 +10,7 @@ private typealias S = Ast.Statement
 final class ParserTests: XCTestCase {
 
   func testBinaryExpr() throws {
-    let expr = assertSingleExprStmt(input: "1 < 2;").expression
+    let expr = assertSingleStmt(from: "1 < 2;", is: S.Expression.self).expression
     let binary = assert(expr, is: E.Binary.self)
     let left = assert(binary.left, is: E.Literal.self)
     let right = assert(binary.right, is: E.Literal.self)
@@ -19,10 +19,45 @@ final class ParserTests: XCTestCase {
     XCTAssertEqual(binary.operator.type, .less)
     XCTAssertEqual(try Ast.PrinterVisitor().eval(expr), "(< 1 2)")
   }
+
+  func testVarDeclNoInitializer() throws {
+    let varStmt = assertSingleStmt(from: "var x;", is: S.Var.self)
+    XCTAssertNil(varStmt.initializer)
+    XCTAssertEqual(varStmt.name.meta.lexeme, "x")
+  }
+
+  func testVarDeclWithInitializer() throws {
+    let varStmt = assertSingleStmt(from: "var x = 3 + 3;", is: S.Var.self)
+    XCTAssertEqual(varStmt.name.meta.lexeme, "x")
+    assert(varStmt.initializer, is: E.Binary.self)
+  }
+
+  func testVariableExpression() throws {
+    let exprStmt = assertSingleStmt(from: "x;", is: S.Expression.self)
+    let varExpr = assert(exprStmt.expression, is: E.Variable.self)
+    XCTAssertEqual(varExpr.name.meta.lexeme, "x")
+  }
+
+  func testAssignmentExpression() throws {
+    let exprStmt = assertSingleStmt(from: "x = 3;", is: S.Expression.self)
+    let assign = assert(exprStmt.expression, is: E.Assignment.self)
+    XCTAssertEqual(assign.name.meta.lexeme, "x")
+    let rhs = assert(assign.value, is: E.Literal.self)
+    XCTAssertEqual(rhs.value, .number(3))
+  }
+
+  func testBlockStatement() throws {
+    let blockStmt = assertSingleStmt(from: "{ x; }", is: S.Block.self)
+    XCTAssertEqual(blockStmt.statements.count, 1)
+    let expr = assert(blockStmt.statements[0], is: S.Expression.self)
+    let varExpr = assert(expr.expression, is: E.Variable.self)
+    XCTAssertEqual(varExpr.name.meta.lexeme, "x")
+  }
 }
 
 // helpers
 
+@discardableResult
 private func assert<Input, Expected>(
   _ expr: Input,
   is type: Expected.Type,
@@ -33,14 +68,15 @@ private func assert<Input, Expected>(
   return expr as! Expected
 }
 
-private func assertSingleExprStmt(
-  input: String,
+private func assertSingleStmt<Expected>(
+  from input: String,
+  is: Expected.Type,
   file: StaticString = #file,
   line: UInt = #line
-) -> S.Expression {
+) -> Expected {
   let statements = getStatements(input)
   XCTAssertEqual(1, statements.count, file: file, line: line)
-  return assert(statements[0], is: S.Expression.self, file: file, line: line)
+  return assert(statements[0], is: Expected.self, file: file, line: line)
 }
 
 private func getStatements(_ input: String) -> [Stmt] {

@@ -4,6 +4,7 @@ public struct RuntimeError: Error, Equatable {
   public enum ErrorType: Equatable {
     case invalidUnaryMinusOperand(Object)
     case invalidBinaryOperands(lhs: Object, operator: Token.TokenType, rhs: Object)
+    case undefinedVariable(String)
   }
 
   public let type: ErrorType
@@ -21,6 +22,8 @@ public struct RuntimeError: Error, Equatable {
       typeError = "invalid operand to unary minus: \(operand.toString)"
     case .invalidBinaryOperands(lhs: _, operator: let op, rhs: _):
       typeError = "invalid binary operands for operator \(op.string)"
+    case .undefinedVariable(let name):
+      typeError = "undefined variable `\(name)`"
     }
     return "Error at \(token.meta.line):\(token.meta.column): \(typeError)"
   }

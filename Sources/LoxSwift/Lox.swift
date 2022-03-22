@@ -11,6 +11,7 @@ import LoxScanner
     case tokens
   }
 
+  static var interpreter = Interpreter()
   static var hadError = false
   static var hadRuntimeError = false
   static var printMode = EvalMode.interpret
@@ -76,7 +77,7 @@ import LoxScanner
     }
 
     let statements = parser.parse()
-    if let runtimeError = Interpreter().interpret(statements) {
+    if let runtimeError = interpreter.interpret(statements) {
       hadRuntimeError = true
       print(runtimeError.message)
     }
@@ -132,6 +133,8 @@ extension Lox.Error: LocalizedError {
       return "Parser Error: expected token \(type.string) at \(line):\(col)"
     case .parserError(.expectedExpression(let line, let col)):
       return "Parser Error: expected expression at \(line):\(col)"
+    case .parserError(.invalidAssignmentTarget(let line, let col)):
+      return "Parser Error: invalid assignment target at \(line):\(col)"
     }
   }
 

@@ -2,6 +2,7 @@ import Foundation
 
 public extension Ast {
   struct PrinterVisitor: ExprVisitor {
+
     public init() {}
 
     public func eval(_ expr: Expr) throws -> String {
@@ -31,6 +32,14 @@ public extension Ast {
 
     public func visitUnaryExpr(_ expr: Ast.Expression.Unary) throws -> String {
       try parenthesize(name: expr.operator.meta.lexeme, expr.right)
+    }
+
+    public func visitVariableExpr(_ expr: Ast.Expression.Variable) throws -> String {
+      fatalError("PrinterVisitor.visitVariableExpr(_:) not implemented")
+    }
+
+    public func visitAssignmentExpr(_ expr: Ast.Expression.Assignment) throws -> String {
+      fatalError("PrinterVisitor.visitAssignmentExpr(_:) not implemented")
     }
 
     func parenthesize(name: String, _ exprs: Expr...) throws -> String {

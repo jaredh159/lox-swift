@@ -28,5 +28,13 @@ public extension Ast {
     public func visitUnaryExpr(_ expr: Ast.Expression.Unary) throws {
       try expr.right.accept(visitor: self)
     }
+
+    public func visitVariableExpr(_ expr: Ast.Expression.Variable) throws {
+      fatalError("RpnVisitor.visitVariableExpr(_:) not implemented")
+    }
+
+    public func visitAssignmentExpr(_ expr: Ast.Expression.Assignment) throws {
+      fatalError("RpnVisitor.visitAssignmentExpr(_:) not implemented")
+    }
   }
 }

@@ -4,6 +4,7 @@ private typealias E = Ast.Expression
 private typealias S = Ast.Statement
 
 public class Interpreter: ExprVisitor, StmtVisitor {
+  private var environment = Environment()
 
   public init() {}
 
@@ -28,6 +29,36 @@ public class Interpreter: ExprVisitor, StmtVisitor {
   public func visitPrintStmt(_ stmt: Ast.Statement.Print) throws {
     let value = try evaluate(stmt.expression)
     print(value.toString)
+  }
+
+  public func visitBlockStmt(_ stmt: Ast.Statement.Block) throws {
+    try executeBlock(stmt.statements, environment: Environment(enclosing: environment))
+  }
+
+  private func executeBlock(_ statements: [Stmt], environment: Environment) throws {
+    let previous = self.environment
+    defer { self.environment = previous }
+    self.environment = environment
+    try statements.forEach { try execute($0) }
+  }
+
+  public func visitVarStmt(_ stmt: Ast.Statement.Var) throws {
+    if let initializer = stmt.initializer {
+      let value = try evaluate(initializer)
+      environment.define(name: stmt.name.meta.lexeme, value: .some(value))
+    } else {
+      environment.define(name: stmt.name.meta.lexeme, value: .some(nil))
+    }
+  }
+
+  public func visitVariableExpr(_ expr: Ast.Expression.Variable) throws -> Object {
+    try environment.get(expr.name) ?? .nil
+  }
+
+  public func visitAssignmentExpr(_ expr: Ast.Expression.Assignment) throws -> Object {
+    let value = try evaluate(expr.value)
+    try environment.assign(name: expr.name, value: value)
+    return value
   }
 
   public func visitBinaryExpr(_ expr: Ast.Expression.Binary) throws -> Object {

@@ -6,7 +6,9 @@
   "main": "index.js",
   "scripts": {
     "start": "watchexec --restart --watch Sources --exts swift --signal SIGINT swift build",
-    "start:tests": "watchexec --restart --watch Sources --watch Tests --exts swift --signal SIGINT swift test"
+    "start:tests": "watchexec --restart --watch Sources --watch Tests --exts swift --signal SIGINT swift test",
+    "repl": "swift run LoxSwift",
+    "codegen": "swift run LoxCodegen"
   },
   "keywords": [],
   "author": "",

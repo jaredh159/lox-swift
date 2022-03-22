@@ -13,14 +13,18 @@ import Foundation
 
   static func main() {
     defineAst(baseName: "Expression", types: [
+      .init("Assignment", ("name", "Token"), ("value", "Expr")),
       .init("Binary", ("left", "Expr"), ("operator", "Token"), ("right", "Expr")),
       .init("Grouping", ("expression", "Expr")),
       .init("Literal", ("value", "Ast.Literal")),
       .init("Unary", ("operator", "Token"), ("right", "Expr")),
+      .init("Variable", ("name", "Token")),
     ])
     defineAst(baseName: "Stmt", types: [
+      .init("Block", ("statements", "[Stmt]")),
       .init("Expression", ("expression", "Expr")),
       .init("Print", ("expression", "Expr")),
+      .init("Var", ("name", "Token"), ("initializer", "Expr?")),
     ])
   }
 

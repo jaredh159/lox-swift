@@ -19,7 +19,7 @@ public class Parser {
     var statements: [Stmt] = []
     do {
       while !isAtEnd {
-        statements.append(try statement())
+        try declaration().map { statements.append($0) }
       }
       return statements
     } catch {
@@ -28,12 +28,43 @@ public class Parser {
     }
   }
 
+  private func declaration() throws -> Stmt? {
+    do {
+      if match(.var) { return try varDeclaration() }
+      return try statement()
+    } catch {
+      synchronize()
+      return nil
+    }
+  }
+
+  private func varDeclaration() throws -> Stmt {
+    let name = try consume(expected: .identifier)
+    var initializer: Expr?
+    if match(.equal) {
+      initializer = try expression()
+    }
+    try consume(expected: .semicolon)
+    return S.Var(name: name, initializer: initializer)
+  }
+
   private func statement() throws -> Stmt {
     if match(.print) {
       return try printStatement()
+    } else if match(.leftBrace) {
+      return S.Block(statements: try block())
     } else {
       return try expressionStatement()
     }
+  }
+
+  private func block() throws -> [Stmt] {
+    var statements: [Stmt] = []
+    while !peekIs(.rightBrace), !isAtEnd, let decl = try declaration() {
+      statements.append(decl)
+    }
+    try consume(expected: .rightBrace)
+    return statements
   }
 
   private func printStatement() throws -> Stmt {
@@ -49,7 +80,21 @@ public class Parser {
   }
 
   private func expression() throws -> Expr {
-    try equality()
+    try assignment()
+  }
+
+  private func assignment() throws -> Expr {
+    let expr = try equality()
+    if match(.equal) {
+      let equals = previous
+      let value = try assignment()
+      if let varExpr = expr as? E.Variable {
+        return E.Assignment(name: varExpr.name, value: value)
+      } else {
+        error(.invalidAssignmentTarget(line: equals.meta.line, column: equals.meta.column))
+      }
+    }
+    return expr
   }
 
   private func equality() throws -> Expr {
@@ -118,6 +163,10 @@ public class Parser {
       }
     }
 
+    if match(.identifier) {
+      return E.Variable(name: previous)
+    }
+
     if match(.leftParen) {
       let expr = try expression()
       try consume(expected: .rightParen)
@@ -161,6 +210,7 @@ public class Parser {
     match(any: type)
   }
 
+  // Bob calls this `check()`
   private func peekIs(_ type: TokenType) -> Bool {
     guard !isAtEnd else { return false }
     return peek.type == type
@@ -179,6 +229,7 @@ public class Parser {
     throw error(.expectedToken(type: type, line: meta.line, column: meta.column))
   }
 
+  @discardableResult
   private func error(_ error: Error) -> Error {
     reportError(error)
     return error
@@ -203,5 +254,6 @@ public extension Parser {
   enum Error: Swift.Error {
     case expectedToken(type: Token.TokenType, line: Int, column: Int)
     case expectedExpression(line: Int, column: Int)
+    case invalidAssignmentTarget(line: Int, column: Int)
   }
 }
