@@ -23,6 +23,7 @@ import Foundation
     defineAst(baseName: "Stmt", types: [
       .init("Block", ("statements", "[Stmt]")),
       .init("Expression", ("expression", "Expr")),
+      .init("If", ("condition", "Expr"), ("thenBranch", "Stmt"), ("elseBranch", "Stmt?")),
       .init("Print", ("expression", "Expr")),
       .init("Var", ("name", "Token"), ("initializer", "Expr?")),
     ])

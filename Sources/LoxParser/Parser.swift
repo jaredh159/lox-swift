@@ -53,9 +53,23 @@ public class Parser {
       return try printStatement()
     } else if match(.leftBrace) {
       return S.Block(statements: try block())
+    } else if match(.if) {
+      return try ifStatement()
     } else {
       return try expressionStatement()
     }
+  }
+
+  private func ifStatement() throws -> Stmt {
+    try consume(expected: .leftParen)
+    let condition = try expression()
+    try consume(expected: .rightParen)
+    let thenBranch = try statement()
+    var elseBranch: Stmt?
+    if match(.else) {
+      elseBranch = try statement()
+    }
+    return S.If(condition: condition, thenBranch: thenBranch, elseBranch: elseBranch)
   }
 
   private func block() throws -> [Stmt] {

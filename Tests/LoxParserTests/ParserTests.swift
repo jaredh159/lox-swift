@@ -12,10 +12,8 @@ final class ParserTests: XCTestCase {
   func testBinaryExpr() throws {
     let expr = assertSingleStmt(from: "1 < 2;", is: S.Expression.self).expression
     let binary = assert(expr, is: E.Binary.self)
-    let left = assert(binary.left, is: E.Literal.self)
-    let right = assert(binary.right, is: E.Literal.self)
-    XCTAssertEqual(left.value, .number(1))
-    XCTAssertEqual(right.value, .number(2))
+    assert(binary.left, isLiteral: 1)
+    assert(binary.right, isLiteral: 2)
     XCTAssertEqual(binary.operator.type, .less)
     XCTAssertEqual(try Ast.PrinterVisitor().eval(expr), "(< 1 2)")
   }
@@ -53,6 +51,23 @@ final class ParserTests: XCTestCase {
     let varExpr = assert(expr.expression, is: E.Variable.self)
     XCTAssertEqual(varExpr.name.meta.lexeme, "x")
   }
+
+  func testIfStatementNoElse() throws {
+    let ifStmt = assertSingleStmt(from: "if (true) 3;", is: S.If.self)
+    assert(ifStmt.condition, isLiteral: true)
+    let thenStmt = assert(ifStmt.thenBranch, is: S.Expression.self)
+    assert(thenStmt.expression, isLiteral: 3)
+    XCTAssertNil(ifStmt.elseBranch)
+  }
+
+  func testIfStatementWithElse() throws {
+    let ifStmt = assertSingleStmt(from: "if (true) 3; else 4;", is: S.If.self)
+    assert(ifStmt.condition, isLiteral: true)
+    let thenStmt = assert(ifStmt.thenBranch, is: S.Expression.self)
+    assert(thenStmt.expression, isLiteral: 3)
+    let elseStmt = assert(ifStmt.elseBranch, is: S.Expression.self)
+    assert(elseStmt.expression, isLiteral: 4)
+  }
 }
 
 // helpers
@@ -66,6 +81,11 @@ private func assert<Input, Expected>(
 ) -> Expected {
   XCTAssertTrue(expr is Expected, file: file, line: line)
   return expr as! Expected
+}
+
+private func assert(_ expr: Expr, isLiteral expected: Ast.Literal) {
+  let literal = assert(expr, is: E.Literal.self)
+  XCTAssertEqual(literal.value, expected)
 }
 
 private func assertSingleStmt<Expected>(

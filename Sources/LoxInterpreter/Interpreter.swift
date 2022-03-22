@@ -51,6 +51,14 @@ public class Interpreter: ExprVisitor, StmtVisitor {
     }
   }
 
+  public func visitIfStmt(_ stmt: Ast.Statement.If) throws {
+    if try evaluate(stmt.condition).isTruthy {
+      try execute(stmt.thenBranch)
+    } else if let elseBranch = stmt.elseBranch {
+      try execute(elseBranch)
+    }
+  }
+
   public func visitVariableExpr(_ expr: Ast.Expression.Variable) throws -> Object {
     try environment.get(expr.name) ?? .nil
   }
