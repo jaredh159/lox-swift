@@ -84,6 +84,13 @@ final class ParserTests: XCTestCase {
     assert(andExp.right, isLiteral: 3)
     XCTAssertEqual(andExp.operator.type, .and)
   }
+
+  func testWhileStatement() throws {
+    let whileStmt = assertSingleStmt(from: "while (true) 3;", is: S.While.self)
+    assert(whileStmt.condition, isLiteral: true)
+    let body = assert(whileStmt.body, is: S.Expression.self)
+    assert(body.expression, isLiteral: 3)
+  }
 }
 
 // helpers

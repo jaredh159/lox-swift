@@ -55,6 +55,8 @@ public class Parser {
       return S.Block(statements: try block())
     } else if match(.if) {
       return try ifStatement()
+    } else if match(.while) {
+      return try whileStatement()
     } else {
       return try expressionStatement()
     }
@@ -70,6 +72,14 @@ public class Parser {
       elseBranch = try statement()
     }
     return S.If(condition: condition, thenBranch: thenBranch, elseBranch: elseBranch)
+  }
+
+  private func whileStatement() throws -> Stmt {
+    try consume(expected: .leftParen)
+    let condition = try expression()
+    try consume(expected: .rightParen)
+    let body = try statement()
+    return S.While(condition: condition, body: body)
   }
 
   private func block() throws -> [Stmt] {

@@ -35,6 +35,12 @@ public class Interpreter: ExprVisitor, StmtVisitor {
     try executeBlock(stmt.statements, environment: Environment(enclosing: environment))
   }
 
+  public func visitWhileStmt(_ stmt: Ast.Statement.While) throws {
+    while try evaluate(stmt.condition).isTruthy {
+      try execute(stmt.body)
+    }
+  }
+
   private func executeBlock(_ statements: [Stmt], environment: Environment) throws {
     let previous = self.environment
     defer { self.environment = previous }

@@ -27,6 +27,7 @@ import Foundation
       .init("If", ("condition", "Expr"), ("thenBranch", "Stmt"), ("elseBranch", "Stmt?")),
       .init("Print", ("expression", "Expr")),
       .init("Var", ("name", "Token"), ("initializer", "Expr?")),
+      .init("While", ("condition", "Expr"), ("body", "Stmt")),
     ])
   }
 

@@ -8,6 +8,7 @@ public protocol StmtVisitor {
   func visitIfStmt(_ stmt: Ast.Statement.If) throws -> SR
   func visitPrintStmt(_ stmt: Ast.Statement.Print) throws -> SR
   func visitVarStmt(_ stmt: Ast.Statement.Var) throws -> SR
+  func visitWhileStmt(_ stmt: Ast.Statement.While) throws -> SR
 }
 
 public extension Ast.Statement {
@@ -74,6 +75,20 @@ public extension Ast.Statement {
 
     public func accept<V: StmtVisitor>(visitor: V) throws -> V.SR {
       try visitor.visitVarStmt(self)
+    }
+  }
+
+  struct While: Stmt {
+    public let condition: Expr
+    public let body: Stmt
+
+    public init(condition: Expr, body: Stmt) {
+      self.condition = condition
+      self.body = body
+    }
+
+    public func accept<V: StmtVisitor>(visitor: V) throws -> V.SR {
+      try visitor.visitWhileStmt(self)
     }
   }
 } 
