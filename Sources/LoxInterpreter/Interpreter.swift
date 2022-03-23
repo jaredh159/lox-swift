@@ -69,6 +69,16 @@ public class Interpreter: ExprVisitor, StmtVisitor {
     return value
   }
 
+  public func visitLogicalExpr(_ expr: Ast.Expression.Logical) throws -> Object {
+    let lhs = try evaluate(expr.left)
+    if expr.operator.type == .or {
+      if lhs.isTruthy { return lhs }
+    } else if !lhs.isTruthy {
+      return lhs
+    }
+    return try evaluate(expr.right)
+  }
+
   public func visitBinaryExpr(_ expr: Ast.Expression.Binary) throws -> Object {
     let lhs = try evaluate(expr.left)
     let rhs = try evaluate(expr.right)

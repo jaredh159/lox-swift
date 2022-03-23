@@ -2,7 +2,6 @@ import Foundation
 
 public extension Ast {
   struct PrinterVisitor: ExprVisitor {
-
     public init() {}
 
     public func eval(_ expr: Expr) throws -> String {
@@ -40,6 +39,10 @@ public extension Ast {
 
     public func visitAssignmentExpr(_ expr: Ast.Expression.Assignment) throws -> String {
       fatalError("PrinterVisitor.visitAssignmentExpr(_:) not implemented")
+    }
+
+    public func visitLogicalExpr(_ expr: Ast.Expression.Logical) throws -> String {
+      fatalError("PrinterVisitor.visitLogicalExpr(_:) not implemented")
     }
 
     func parenthesize(name: String, _ exprs: Expr...) throws -> String {

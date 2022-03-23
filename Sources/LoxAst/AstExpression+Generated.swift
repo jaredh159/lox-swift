@@ -7,6 +7,7 @@ public protocol ExprVisitor {
   func visitBinaryExpr(_ expr: Ast.Expression.Binary) throws -> ER
   func visitGroupingExpr(_ expr: Ast.Expression.Grouping) throws -> ER
   func visitLiteralExpr(_ expr: Ast.Expression.Literal) throws -> ER
+  func visitLogicalExpr(_ expr: Ast.Expression.Logical) throws -> ER
   func visitUnaryExpr(_ expr: Ast.Expression.Unary) throws -> ER
   func visitVariableExpr(_ expr: Ast.Expression.Variable) throws -> ER
 }
@@ -63,6 +64,22 @@ public extension Ast.Expression {
 
     public func accept<V: ExprVisitor>(visitor: V) throws -> V.ER {
       try visitor.visitLiteralExpr(self)
+    }
+  }
+
+  struct Logical: Expr {
+    public let left: Expr
+    public let `operator`: Token
+    public let right: Expr
+
+    public init(left: Expr, operator: Token, right: Expr) {
+      self.left = left
+      self.operator = `operator`
+      self.right = right
+    }
+
+    public func accept<V: ExprVisitor>(visitor: V) throws -> V.ER {
+      try visitor.visitLogicalExpr(self)
     }
   }
 

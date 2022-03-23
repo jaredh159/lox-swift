@@ -17,6 +17,7 @@ import Foundation
       .init("Binary", ("left", "Expr"), ("operator", "Token"), ("right", "Expr")),
       .init("Grouping", ("expression", "Expr")),
       .init("Literal", ("value", "Ast.Literal")),
+      .init("Logical", ("left", "Expr"), ("operator", "Token"), ("right", "Expr")),
       .init("Unary", ("operator", "Token"), ("right", "Expr")),
       .init("Variable", ("name", "Token")),
     ])

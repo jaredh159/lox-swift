@@ -36,5 +36,9 @@ public extension Ast {
     public func visitAssignmentExpr(_ expr: Ast.Expression.Assignment) throws {
       fatalError("RpnVisitor.visitAssignmentExpr(_:) not implemented")
     }
+
+    public func visitLogicalExpr(_ expr: Ast.Expression.Logical) throws {
+      fatalError("RpnVisitor.visitLogicalExpr(_:) not implemented")
+    }
   }
 }

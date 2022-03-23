@@ -68,6 +68,22 @@ final class ParserTests: XCTestCase {
     let elseStmt = assert(ifStmt.elseBranch, is: S.Expression.self)
     assert(elseStmt.expression, isLiteral: 4)
   }
+
+  func testOrStatement() throws {
+    let orStmt = assertSingleStmt(from: "false or true;", is: S.Expression.self)
+    let orExp = assert(orStmt.expression, is: E.Logical.self)
+    assert(orExp.left, isLiteral: false)
+    assert(orExp.right, isLiteral: true)
+    XCTAssertEqual(orExp.operator.type, .or)
+  }
+
+  func testAndStatement() throws {
+    let orStmt = assertSingleStmt(from: "true and 3;", is: S.Expression.self)
+    let andExp = assert(orStmt.expression, is: E.Logical.self)
+    assert(andExp.left, isLiteral: true)
+    assert(andExp.right, isLiteral: 3)
+    XCTAssertEqual(andExp.operator.type, .and)
+  }
 }
 
 // helpers

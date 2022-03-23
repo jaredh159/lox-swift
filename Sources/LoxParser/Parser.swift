@@ -98,7 +98,7 @@ public class Parser {
   }
 
   private func assignment() throws -> Expr {
-    let expr = try equality()
+    let expr = try or()
     if match(.equal) {
       let equals = previous
       let value = try assignment()
@@ -107,6 +107,26 @@ public class Parser {
       } else {
         error(.invalidAssignmentTarget(line: equals.meta.line, column: equals.meta.column))
       }
+    }
+    return expr
+  }
+
+  private func or() throws -> Expr {
+    var expr = try and()
+    while match(.or) {
+      let op = previous
+      let rhs = try and()
+      expr = E.Logical(left: expr, operator: op, right: rhs)
+    }
+    return expr
+  }
+
+  private func and() throws -> Expr {
+    var expr = try equality()
+    while match(.and) {
+      let op = previous
+      let rhs = try equality()
+      expr = E.Logical(left: expr, operator: op, right: rhs)
     }
     return expr
   }
