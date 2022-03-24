@@ -23,6 +23,9 @@ public class Environment {
     case .some(.some), .some(.none):
       values[name] = value
     case .none:
+      if let enclosing = enclosing {
+        return try enclosing.assign(name: token, value: value)
+      }
       throw RuntimeError(.undefinedVariable(name), token)
     }
   }

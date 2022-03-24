@@ -91,6 +91,42 @@ final class ParserTests: XCTestCase {
     let body = assert(whileStmt.body, is: S.Expression.self)
     assert(body.expression, isLiteral: 3)
   }
+
+  func testForLoopInfinite() throws {
+    let whileStmt = assertSingleStmt(from: "for (;;) 3;", is: S.While.self)
+    assert(whileStmt.condition, isLiteral: true)
+    let body = assert(whileStmt.body, is: S.Expression.self)
+    assert(body.expression, isLiteral: 3)
+  }
+
+  func testForLoopFull() throws {
+    let outerBlock = assertSingleStmt(
+      from: "for (var i = 0; i < 10; i = i + 1) print i;",
+      is: S.Block.self
+    )
+    XCTAssertEqual(outerBlock.statements.count, 2)
+    let initializer = assert(outerBlock.statements.first, is: S.Var.self)
+    XCTAssertEqual(initializer.name.meta.lexeme, "i")
+    assert(initializer.initializer!, isLiteral: 0)
+    let whileStmt = assert(outerBlock.statements.last, is: S.While.self)
+    let comparison = assert(whileStmt.condition, is: E.Binary.self)
+    assert(comparison.left, is: E.Variable.self)
+    XCTAssertEqual(comparison.operator.type, .less)
+    assert(comparison.right, isLiteral: 10)
+    let whileBody = assert(whileStmt.body, is: S.Block.self)
+    XCTAssertEqual(whileBody.statements.count, 2)
+    let printStmt = assert(whileBody.statements.first, is: S.Print.self)
+    let printExpr = assert(printStmt.expression, is: E.Variable.self)
+    XCTAssertEqual(printExpr.name.meta.lexeme, "i")
+    let assign = assert(whileBody.statements.last, is: S.Expression.self)
+    let incr = assert(assign.expression, is: E.Assignment.self)
+    XCTAssertEqual(incr.name.meta.lexeme, "i")
+    let assignExpr = assert(incr.value, is: E.Binary.self)
+    let assignLhs = assert(assignExpr.left, is: E.Variable.self)
+    XCTAssertEqual(assignLhs.name.meta.lexeme, "i")
+    XCTAssertEqual(assignExpr.operator.type, .plus)
+    assert(assignExpr.right, isLiteral: 1)
+  }
 }
 
 // helpers

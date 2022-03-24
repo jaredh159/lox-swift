@@ -57,9 +57,52 @@ public class Parser {
       return try ifStatement()
     } else if match(.while) {
       return try whileStatement()
+    } else if match(.for) {
+      return try forStatement()
     } else {
       return try expressionStatement()
     }
+  }
+
+  private func forStatement() throws -> Stmt {
+    try consume(expected: .leftParen)
+    let initializer: Stmt?
+    if match(.semicolon) {
+      initializer = nil
+    } else if match(.var) {
+      initializer = try varDeclaration()
+    } else {
+      initializer = try expressionStatement()
+    }
+
+    let condition: Expr?
+    if !peekIs(.semicolon) {
+      condition = try expression()
+    } else {
+      condition = nil
+    }
+    try consume(expected: .semicolon)
+
+    let increment: Expr?
+    if !peekIs(.rightParen) {
+      increment = try expression()
+    } else {
+      increment = nil
+    }
+    try consume(expected: .rightParen)
+
+    var body = try statement()
+    if let increment = increment {
+      body = S.Block(statements: [body, S.Expression(expression: increment)])
+    }
+
+    body = S.While(condition: condition ?? E.Literal(value: true), body: body)
+
+    if let initializer = initializer {
+      body = S.Block(statements: [initializer, body])
+    }
+
+    return body
   }
 
   private func ifStatement() throws -> Stmt {
