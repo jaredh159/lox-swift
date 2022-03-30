@@ -10,6 +10,11 @@ public class Parser {
   private var tokens: [Token]
   private var current: Int = 0
 
+  enum FunctionKind: String {
+    case function
+    case method
+  }
+
   public init(tokens: [Token], onError reportError: @escaping (Error) -> Void) {
     self.tokens = tokens
     self.reportError = reportError
@@ -30,6 +35,7 @@ public class Parser {
 
   private func declaration() throws -> Stmt? {
     do {
+      if match(.fun) { return try function(.function) }
       if match(.var) { return try varDeclaration() }
       return try statement()
     } catch {
@@ -38,13 +44,32 @@ public class Parser {
     }
   }
 
+  private func function(_ kind: FunctionKind) throws -> Stmt {
+    let name = try consume(expected: .identifier, "expected \(kind) name")
+    try consume(expected: .leftParen, "expected '(' after \(kind) name")
+    var parameters: [Token] = []
+    if !peekIs(.rightParen) {
+      repeat {
+        if parameters.count >= 255 {
+          error(.excessParameters(line: peek.meta.line, column: peek.meta.column))
+        }
+        parameters.append(try consume(expected: .identifier, "expected parameter name"))
+
+      } while match(.comma)
+    }
+    try consume(expected: .rightParen, "expected ')' after parameters")
+    try consume(expected: .leftBrace, "expected '{' before \(kind) body")
+    let body = try block()
+    return S.Function(name: name, params: parameters, body: body)
+  }
+
   private func varDeclaration() throws -> Stmt {
-    let name = try consume(expected: .identifier)
+    let name = try consume(expected: .identifier, "expected variable name")
     var initializer: Expr?
     if match(.equal) {
       initializer = try expression()
     }
-    try consume(expected: .semicolon)
+    try consume(expected: .semicolon, "expected `;` after variable declaration")
     return S.Var(name: name, initializer: initializer)
   }
 
@@ -65,7 +90,7 @@ public class Parser {
   }
 
   private func forStatement() throws -> Stmt {
-    try consume(expected: .leftParen)
+    try consume(expected: .leftParen, "expected '(' after 'for'")
     let initializer: Stmt?
     if match(.semicolon) {
       initializer = nil
@@ -81,7 +106,7 @@ public class Parser {
     } else {
       condition = nil
     }
-    try consume(expected: .semicolon)
+    try consume(expected: .semicolon, "expected `;` after loop condition")
 
     let increment: Expr?
     if !peekIs(.rightParen) {
@@ -89,7 +114,7 @@ public class Parser {
     } else {
       increment = nil
     }
-    try consume(expected: .rightParen)
+    try consume(expected: .rightParen, "expected `)` after `for` clauses")
 
     var body = try statement()
     if let increment = increment {
@@ -106,9 +131,9 @@ public class Parser {
   }
 
   private func ifStatement() throws -> Stmt {
-    try consume(expected: .leftParen)
+    try consume(expected: .leftParen, "expected '(' after 'if'")
     let condition = try expression()
-    try consume(expected: .rightParen)
+    try consume(expected: .rightParen, "expected ')' after if condition")
     let thenBranch = try statement()
     var elseBranch: Stmt?
     if match(.else) {
@@ -118,9 +143,9 @@ public class Parser {
   }
 
   private func whileStatement() throws -> Stmt {
-    try consume(expected: .leftParen)
+    try consume(expected: .leftParen, "expected '(' after 'while'")
     let condition = try expression()
-    try consume(expected: .rightParen)
+    try consume(expected: .rightParen, "expected ')' after condition")
     let body = try statement()
     return S.While(condition: condition, body: body)
   }
@@ -130,19 +155,19 @@ public class Parser {
     while !peekIs(.rightBrace), !isAtEnd, let decl = try declaration() {
       statements.append(decl)
     }
-    try consume(expected: .rightBrace)
+    try consume(expected: .rightBrace, "expected `}` after block")
     return statements
   }
 
   private func printStatement() throws -> Stmt {
     let value = try expression()
-    try consume(expected: .semicolon)
+    try consume(expected: .semicolon, "expected `;` after value")
     return S.Print(expression: value)
   }
 
   private func expressionStatement() throws -> Stmt {
     let expr = try expression()
-    try consume(expected: .semicolon)
+    try consume(expected: .semicolon, "expected `;` after expression")
     return S.Expression(expression: expr)
   }
 
@@ -230,7 +255,33 @@ public class Parser {
       let right = try unary()
       return E.Unary(operator: op, right: right)
     }
-    return try primary()
+    return try call()
+  }
+
+  private func call() throws -> Expr {
+    var expr = try primary()
+    while true {
+      if match(.leftParen) {
+        expr = try finishCall(expr)
+      } else {
+        break
+      }
+    }
+    return expr
+  }
+
+  private func finishCall(_ callee: Expr) throws -> Expr {
+    var arguments: [Expr] = []
+    if !peekIs(.rightParen) {
+      repeat {
+        if arguments.count >= 255 {
+          error(.excessArguments(line: peek.meta.line, column: peek.meta.column))
+        }
+        arguments.append(try expression())
+      } while match(.comma)
+    }
+    let paren = try consume(expected: .rightParen, "expected `)` after arguments")
+    return E.Call(callee: callee, paren: paren, arguments: arguments)
   }
 
   private func primary() throws -> Expr {
@@ -256,7 +307,7 @@ public class Parser {
 
     if match(.leftParen) {
       let expr = try expression()
-      try consume(expected: .rightParen)
+      try consume(expected: .rightParen, "expected `)` after grouped expression")
       return E.Grouping(expression: expr)
     }
 
@@ -310,10 +361,10 @@ public class Parser {
   }
 
   @discardableResult
-  private func consume(expected type: TokenType) throws -> Token {
+  private func consume(expected type: TokenType, _ message: String) throws -> Token {
     if peekIs(type) { return advance() }
     let meta = peek.meta
-    throw error(.expectedToken(type: type, line: meta.line, column: meta.column))
+    throw error(.expectedToken(type: type, message: message, line: meta.line, column: meta.column))
   }
 
   @discardableResult
@@ -339,8 +390,10 @@ public class Parser {
 
 public extension Parser {
   enum Error: Swift.Error {
-    case expectedToken(type: Token.TokenType, line: Int, column: Int)
+    case expectedToken(type: Token.TokenType, message: String, line: Int, column: Int)
     case expectedExpression(line: Int, column: Int)
     case invalidAssignmentTarget(line: Int, column: Int)
+    case excessParameters(line: Int, column: Int)
+    case excessArguments(line: Int, column: Int)
   }
 }

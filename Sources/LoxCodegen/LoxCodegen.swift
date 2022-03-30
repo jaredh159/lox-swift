@@ -15,6 +15,7 @@ import Foundation
     defineAst(baseName: "Expression", types: [
       .init("Assignment", ("name", "Token"), ("value", "Expr")),
       .init("Binary", ("left", "Expr"), ("operator", "Token"), ("right", "Expr")),
+      .init("Call", ("callee", "Expr"), ("paren", "Token"), ("arguments", "[Expr]")),
       .init("Grouping", ("expression", "Expr")),
       .init("Literal", ("value", "Ast.Literal")),
       .init("Logical", ("left", "Expr"), ("operator", "Token"), ("right", "Expr")),
@@ -24,6 +25,7 @@ import Foundation
     defineAst(baseName: "Stmt", types: [
       .init("Block", ("statements", "[Stmt]")),
       .init("Expression", ("expression", "Expr")),
+      .init("Function", ("name", "Token"), ("params", "[Token]"), ("body", "[Stmt]")),
       .init("If", ("condition", "Expr"), ("thenBranch", "Stmt"), ("elseBranch", "Stmt?")),
       .init("Print", ("expression", "Expr")),
       .init("Var", ("name", "Token"), ("initializer", "Expr?")),

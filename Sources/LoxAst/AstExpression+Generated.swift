@@ -5,6 +5,7 @@ public protocol ExprVisitor {
   associatedtype ER
   func visitAssignmentExpr(_ expr: Ast.Expression.Assignment) throws -> ER
   func visitBinaryExpr(_ expr: Ast.Expression.Binary) throws -> ER
+  func visitCallExpr(_ expr: Ast.Expression.Call) throws -> ER
   func visitGroupingExpr(_ expr: Ast.Expression.Grouping) throws -> ER
   func visitLiteralExpr(_ expr: Ast.Expression.Literal) throws -> ER
   func visitLogicalExpr(_ expr: Ast.Expression.Logical) throws -> ER
@@ -40,6 +41,22 @@ public extension Ast.Expression {
 
     public func accept<V: ExprVisitor>(visitor: V) throws -> V.ER {
       try visitor.visitBinaryExpr(self)
+    }
+  }
+
+  struct Call: Expr {
+    public let callee: Expr
+    public let paren: Token
+    public let arguments: [Expr]
+
+    public init(callee: Expr, paren: Token, arguments: [Expr]) {
+      self.callee = callee
+      self.paren = paren
+      self.arguments = arguments
+    }
+
+    public func accept<V: ExprVisitor>(visitor: V) throws -> V.ER {
+      try visitor.visitCallExpr(self)
     }
   }
 

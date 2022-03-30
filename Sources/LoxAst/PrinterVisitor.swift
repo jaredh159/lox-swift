@@ -45,6 +45,10 @@ public extension Ast {
       fatalError("PrinterVisitor.visitLogicalExpr(_:) not implemented")
     }
 
+    public func visitCallExpr(_ expr: Ast.Expression.Call) throws -> String {
+      fatalError("PrinterVisitor.visitCallExpr(_:) not implemented")
+    }
+
     func parenthesize(name: String, _ exprs: Expr...) throws -> String {
       "(\(name) \(try exprs.map { try $0.accept(visitor: self) }.joined(separator: " ")))"
     }

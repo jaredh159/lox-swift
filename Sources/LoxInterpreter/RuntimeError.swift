@@ -5,6 +5,7 @@ public struct RuntimeError: Error, Equatable {
     case invalidUnaryMinusOperand(Object)
     case invalidBinaryOperands(lhs: Object, operator: Token.TokenType, rhs: Object)
     case undefinedVariable(String)
+    case invalidCallable
   }
 
   public let type: ErrorType
@@ -24,6 +25,8 @@ public struct RuntimeError: Error, Equatable {
       typeError = "invalid binary operands for operator \(op.string)"
     case .undefinedVariable(let name):
       typeError = "undefined variable `\(name)`"
+    case .invalidCallable:
+      typeError = "can only call functions and classes"
     }
     return "Error at \(token.meta.line):\(token.meta.column): \(typeError)"
   }

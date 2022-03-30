@@ -1,12 +1,17 @@
+import Foundation
 import LoxAst
 
 private typealias E = Ast.Expression
 private typealias S = Ast.Statement
 
 public class Interpreter: ExprVisitor, StmtVisitor {
-  private var environment = Environment()
+  public var globals = Environment()
+  private var environment: Environment
 
-  public init() {}
+  public init() {
+    environment = globals
+    globals.define(name: "clock", value: .callable(Clock()))
+  }
 
   public func interpret(_ statements: [Stmt]) -> RuntimeError? {
     do {
@@ -41,7 +46,7 @@ public class Interpreter: ExprVisitor, StmtVisitor {
     }
   }
 
-  private func executeBlock(_ statements: [Stmt], environment: Environment) throws {
+  public func executeBlock(_ statements: [Stmt], environment: Environment) throws {
     let previous = self.environment
     defer { self.environment = previous }
     self.environment = environment
@@ -65,8 +70,25 @@ public class Interpreter: ExprVisitor, StmtVisitor {
     }
   }
 
+  public func visitFunctionStmt(_ stmt: Ast.Statement.Function) throws {
+    let function = UserFunction(stmt)
+    environment.define(name: stmt.name.meta.lexeme, value: .callable(function))
+  }
+
   public func visitVariableExpr(_ expr: Ast.Expression.Variable) throws -> Object {
     try environment.get(expr.name) ?? .nil
+  }
+
+  public func visitCallExpr(_ expr: Ast.Expression.Call) throws -> Object {
+    let callee = try evaluate(expr.callee)
+    var arguments: [Object] = []
+    for argument in expr.arguments {
+      arguments.append(try evaluate(argument))
+    }
+    guard case .callable(let callable) = callee else {
+      throw RuntimeError(.invalidCallable, expr.paren)
+    }
+    return try callable.call(self, arguments: arguments)
   }
 
   public func visitAssignmentExpr(_ expr: Ast.Expression.Assignment) throws -> Object {

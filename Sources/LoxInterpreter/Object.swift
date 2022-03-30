@@ -1,9 +1,10 @@
 import LoxAst
 
-public enum Object: Equatable {
+public enum Object {
   case string(String)
   case number(Double)
   case boolean(Bool)
+  case callable(Callable)
   case `nil`
 
   public var isTruthy: Bool {
@@ -27,6 +28,8 @@ public enum Object: Equatable {
         .yellow
     case .boolean(let bool):
       return String(bool).cyan
+    case .callable(let callable):
+      return callable.toString
     case .nil:
       return "nil".magenta
     }
@@ -34,6 +37,25 @@ public enum Object: Equatable {
 }
 
 // extensions
+
+extension Object: Equatable {
+  public static func == (lhs: Object, rhs: Object) -> Bool {
+    switch (lhs, rhs) {
+    case (.string(let a), .string(let b)):
+      return a == b
+    case (.number(let a), .number(let b)):
+      return a == b
+    case (.boolean(let a), .boolean(let b)):
+      return a == b
+    case (.callable(let a), .callable(let b)):
+      return a.id == b.id
+    case (.nil, .nil):
+      return true
+    default:
+      return false
+    }
+  }
+}
 
 extension Object: ExpressibleByNilLiteral {
   public init(nilLiteral: ()) {

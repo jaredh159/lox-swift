@@ -40,5 +40,9 @@ public extension Ast {
     public func visitLogicalExpr(_ expr: Ast.Expression.Logical) throws {
       fatalError("RpnVisitor.visitLogicalExpr(_:) not implemented")
     }
+
+    public func visitCallExpr(_ expr: Ast.Expression.Call) throws {
+      fatalError("RpnVisitor.visitCallExpr(_:) not implemented")
+    }
   }
 }

@@ -129,12 +129,16 @@ extension Lox.Error: LocalizedError {
       return "Scanner Error: unexpected character at \(line):\(col)"
     case .scannerError(.unterminatedString(line: let line, column: let col)):
       return "Scanner Error: unterminated string at \(line):\(col)"
-    case .parserError(.expectedToken(let type, let line, let col)):
-      return "Parser Error: expected token \(type.string) at \(line):\(col)"
+    case .parserError(.expectedToken(_, let message, let line, let col)):
+      return "Parser Error: \(message) at \(line):\(col)"
     case .parserError(.expectedExpression(let line, let col)):
       return "Parser Error: expected expression at \(line):\(col)"
     case .parserError(.invalidAssignmentTarget(let line, let col)):
       return "Parser Error: invalid assignment target at \(line):\(col)"
+    case .parserError(.excessArguments(let line, let col)):
+      return "Parser Error: excess arguments (max 255) at \(line):\(col)"
+    case .parserError(.excessParameters(let line, let col)):
+      return "Parser Error: excess parameters (max 255) at \(line):\(col)"
     }
   }
 

@@ -5,6 +5,7 @@ public protocol StmtVisitor {
   associatedtype SR
   func visitBlockStmt(_ stmt: Ast.Statement.Block) throws -> SR
   func visitExpressionStmt(_ stmt: Ast.Statement.Expression) throws -> SR
+  func visitFunctionStmt(_ stmt: Ast.Statement.Function) throws -> SR
   func visitIfStmt(_ stmt: Ast.Statement.If) throws -> SR
   func visitPrintStmt(_ stmt: Ast.Statement.Print) throws -> SR
   func visitVarStmt(_ stmt: Ast.Statement.Var) throws -> SR
@@ -33,6 +34,22 @@ public extension Ast.Statement {
 
     public func accept<V: StmtVisitor>(visitor: V) throws -> V.SR {
       try visitor.visitExpressionStmt(self)
+    }
+  }
+
+  struct Function: Stmt {
+    public let name: Token
+    public let params: [Token]
+    public let body: [Stmt]
+
+    public init(name: Token, params: [Token], body: [Stmt]) {
+      self.name = name
+      self.params = params
+      self.body = body
+    }
+
+    public func accept<V: StmtVisitor>(visitor: V) throws -> V.SR {
+      try visitor.visitFunctionStmt(self)
     }
   }
 
