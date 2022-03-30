@@ -8,6 +8,7 @@ public protocol StmtVisitor {
   func visitFunctionStmt(_ stmt: Ast.Statement.Function) throws -> SR
   func visitIfStmt(_ stmt: Ast.Statement.If) throws -> SR
   func visitPrintStmt(_ stmt: Ast.Statement.Print) throws -> SR
+  func visitReturnStmt(_ stmt: Ast.Statement.Return) throws -> SR
   func visitVarStmt(_ stmt: Ast.Statement.Var) throws -> SR
   func visitWhileStmt(_ stmt: Ast.Statement.While) throws -> SR
 }
@@ -81,6 +82,20 @@ public extension Ast.Statement {
     }
   }
 
+  struct Return: Stmt {
+    public let keyword: Token
+    public let value: Expr?
+
+    public init(keyword: Token, value: Expr?) {
+      self.keyword = keyword
+      self.value = value
+    }
+
+    public func accept<V: StmtVisitor>(visitor: V) throws -> V.SR {
+      try visitor.visitReturnStmt(self)
+    }
+  }
+
   struct Var: Stmt {
     public let name: Token
     public let initializer: Expr?
@@ -108,4 +123,4 @@ public extension Ast.Statement {
       try visitor.visitWhileStmt(self)
     }
   }
-} 
+}

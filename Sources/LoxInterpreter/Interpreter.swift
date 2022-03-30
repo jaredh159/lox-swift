@@ -75,6 +75,16 @@ public class Interpreter: ExprVisitor, StmtVisitor {
     environment.define(name: stmt.name.meta.lexeme, value: .callable(function))
   }
 
+  public func visitReturnStmt(_ stmt: Ast.Statement.Return) throws {
+    let value: Object?
+    if let stmtValue = stmt.value {
+      value = try evaluate(stmtValue)
+    } else {
+      value = nil
+    }
+    throw Return(value: value)
+  }
+
   public func visitVariableExpr(_ expr: Ast.Expression.Variable) throws -> Object {
     try environment.get(expr.name) ?? .nil
   }
@@ -185,4 +195,8 @@ public class Interpreter: ExprVisitor, StmtVisitor {
   private func execute(_ statement: Stmt) throws {
     try statement.accept(visitor: self)
   }
+}
+
+struct Return: Error {
+  let value: Object?
 }

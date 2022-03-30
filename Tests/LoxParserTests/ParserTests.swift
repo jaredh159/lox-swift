@@ -163,6 +163,14 @@ final class ParserTests: XCTestCase {
     XCTAssertEqual(binary.operator.type, .plus)
     assert(binary.right, isVar: "y")
   }
+
+  func testReturnStmt() {
+    let funDecl = assertSingleStmt(from: "fun foo() { return 1; }", is: S.Function.self)
+    XCTAssertEqual(funDecl.body.count, 1)
+    let returnStmt = assert(funDecl.body.first!, is: S.Return.self)
+    XCTAssertEqual(returnStmt.keyword.meta.lexeme, "return")
+    assert(returnStmt.value!, isLiteral: 1)
+  }
 }
 
 // helpers

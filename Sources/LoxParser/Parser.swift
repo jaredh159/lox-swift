@@ -76,6 +76,8 @@ public class Parser {
   private func statement() throws -> Stmt {
     if match(.print) {
       return try printStatement()
+    } else if match(.return) {
+      return try returnStatement()
     } else if match(.leftBrace) {
       return S.Block(statements: try block())
     } else if match(.if) {
@@ -87,6 +89,13 @@ public class Parser {
     } else {
       return try expressionStatement()
     }
+  }
+
+  private func returnStatement() throws -> Stmt {
+    let keyword = previous
+    let value: Expr? = peekIs(.semicolon) ? nil : try expression()
+    try consume(expected: .semicolon, "expected `;` after return value")
+    return S.Return(keyword: keyword, value: value)
   }
 
   private func forStatement() throws -> Stmt {

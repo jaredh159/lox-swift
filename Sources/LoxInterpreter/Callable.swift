@@ -29,7 +29,13 @@ public struct UserFunction: Callable {
     for (param, arg) in zip(declaration.params, arguments) {
       env.define(name: param.meta.lexeme, value: arg)
     }
-    try interpreter.executeBlock(declaration.body, environment: env)
+
+    do {
+      try interpreter.executeBlock(declaration.body, environment: env)
+    } catch let `return` as Return {
+      return `return`.value ?? nil
+    }
+
     return nil
   }
 }

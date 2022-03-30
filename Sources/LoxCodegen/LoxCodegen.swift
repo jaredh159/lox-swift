@@ -28,6 +28,7 @@ import Foundation
       .init("Function", ("name", "Token"), ("params", "[Token]"), ("body", "[Stmt]")),
       .init("If", ("condition", "Expr"), ("thenBranch", "Stmt"), ("elseBranch", "Stmt?")),
       .init("Print", ("expression", "Expr")),
+      .init("Return", ("keyword", "Token"), ("value", "Expr?")),
       .init("Var", ("name", "Token"), ("initializer", "Expr?")),
       .init("While", ("condition", "Expr"), ("body", "Stmt")),
     ])
