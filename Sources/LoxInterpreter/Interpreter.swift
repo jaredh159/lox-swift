@@ -71,7 +71,7 @@ public class Interpreter: ExprVisitor, StmtVisitor {
   }
 
   public func visitFunctionStmt(_ stmt: Ast.Statement.Function) throws {
-    let function = UserFunction(stmt)
+    let function = UserFunction(stmt, environment: environment)
     environment.define(name: stmt.name.meta.lexeme, value: .callable(function))
   }
 

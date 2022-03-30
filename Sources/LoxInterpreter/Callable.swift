@@ -11,6 +11,7 @@ public protocol Callable {
 public struct UserFunction: Callable {
   public let id = UUID().uuidString
   private let declaration: Ast.Statement.Function
+  private let closure: Environment
 
   public var arity: Int {
     declaration.params.count
@@ -20,12 +21,13 @@ public struct UserFunction: Callable {
     "<user fn: \(declaration.name.meta.lexeme)>"
   }
 
-  public init(_ declaration: Ast.Statement.Function) {
+  public init(_ declaration: Ast.Statement.Function, environment closure: Environment) {
     self.declaration = declaration
+    self.closure = closure
   }
 
   public func call(_ interpreter: Interpreter, arguments: [Object]) throws -> Object {
-    let env = Environment(enclosing: interpreter.globals)
+    let env = Environment(enclosing: closure)
     for (param, arg) in zip(declaration.params, arguments) {
       env.define(name: param.meta.lexeme, value: arg)
     }
