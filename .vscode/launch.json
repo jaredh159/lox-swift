@@ -1,0 +1,40 @@
+{
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug LoxSwift",
+      "program": "${workspaceFolder:LoxSwift}/.build/debug/LoxSwift",
+      "args": [],
+      "cwd": "${workspaceFolder:LoxSwift}",
+      "preLaunchTask": "swift: Build Debug LoxSwift"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Release LoxSwift",
+      "program": "${workspaceFolder:LoxSwift}/.build/release/LoxSwift",
+      "args": [],
+      "cwd": "${workspaceFolder:LoxSwift}",
+      "preLaunchTask": "swift: Build Release LoxSwift"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug LoxCodegen",
+      "program": "${workspaceFolder:LoxSwift}/.build/debug/LoxCodegen",
+      "args": [],
+      "cwd": "${workspaceFolder:LoxSwift}",
+      "preLaunchTask": "swift: Build Debug LoxCodegen"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Release LoxCodegen",
+      "program": "${workspaceFolder:LoxSwift}/.build/release/LoxCodegen",
+      "args": [],
+      "cwd": "${workspaceFolder:LoxSwift}",
+      "preLaunchTask": "swift: Build Release LoxCodegen"
+    }
+  ]
+}

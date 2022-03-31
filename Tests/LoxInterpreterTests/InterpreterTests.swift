@@ -6,6 +6,23 @@ import LoxParser
 import LoxScanner
 
 final class InterpreterTests: XCTestCase {
+
+  func testWeirdScopeEdgeCase() throws {
+    let input = """
+    var a = "global";
+    {
+      fun testA() {
+        assertEqual(a, "global");
+      }
+
+      testA();
+      var a = "block";
+      testA();
+    }
+    """
+    XCTAssertNil(interpret(input))
+  }
+
   func testEvaluatingExpressions() throws {
     let cases: [(String, Object)] = [
       ("1", 1),
@@ -68,16 +85,12 @@ final class InterpreterTests: XCTestCase {
   }
 }
 
+private func interpret(_ input: String) -> RuntimeError? {
+  Interpreter().interpret(statements(from: input))
+}
+
 private func eval(_ input: String) -> Result<Object, RuntimeError> {
-  let scanner = LoxScanner.Scanner(
-    source: input,
-    onError: { e in fatalError(e.localizedDescription) }
-  )
-  let parser = Parser(
-    tokens: scanner.getTokens(),
-    onError: { err in fatalError("Interpreter tests error for input: `\(input)`, err: \(err)") }
-  )
-  let statements = parser.parse()
+  let statements = statements(from: input)
   let exprStatement = statements[0] as! Ast.Statement.Expression
   let expr = exprStatement.expression
   let interpreter = Interpreter()
@@ -86,4 +99,16 @@ private func eval(_ input: String) -> Result<Object, RuntimeError> {
   } catch {
     return .failure(error as! RuntimeError)
   }
+}
+
+private func statements(from input: String) -> [Stmt] {
+  let scanner = LoxScanner.Scanner(
+    source: input,
+    onError: { e in fatalError(e.localizedDescription) }
+  )
+  let parser = Parser(
+    tokens: scanner.getTokens(),
+    onError: { err in fatalError("Interpreter tests error for input: `\(input)`, err: \(err)") }
+  )
+  return parser.parse()
 }

@@ -10,6 +10,7 @@ public class Interpreter: ExprVisitor, StmtVisitor {
 
   public init() {
     environment = globals
+    globals.define(name: "assertEqual", value: .callable(AssertEqual()))
     globals.define(name: "clock", value: .callable(Clock()))
   }
 
@@ -98,7 +99,7 @@ public class Interpreter: ExprVisitor, StmtVisitor {
     guard case .callable(let callable) = callee else {
       throw RuntimeError(.invalidCallable, expr.paren)
     }
-    return try callable.call(self, arguments: arguments)
+    return try callable.call(self, arguments: arguments, token: expr.paren)
   }
 
   public func visitAssignmentExpr(_ expr: Ast.Expression.Assignment) throws -> Object {
