@@ -1,5 +1,6 @@
 import Foundation
 import LoxAst
+import LoxScanner
 
 private typealias E = Ast.Expression
 private typealias S = Ast.Statement
@@ -7,6 +8,7 @@ private typealias S = Ast.Statement
 public class Interpreter: ExprVisitor, StmtVisitor {
   public var globals = Environment()
   private var environment: Environment
+  private var locals: [UUID: Int] = [:]
 
   public init() {
     environment = globals
@@ -21,6 +23,10 @@ public class Interpreter: ExprVisitor, StmtVisitor {
       return error as? RuntimeError
     }
     return nil
+  }
+
+  public func resolve(expr: Expr, depth: Int) {
+    locals[expr.id] = depth
   }
 
   @discardableResult
@@ -87,7 +93,15 @@ public class Interpreter: ExprVisitor, StmtVisitor {
   }
 
   public func visitVariableExpr(_ expr: Ast.Expression.Variable) throws -> Object {
-    try environment.get(expr.name) ?? .nil
+    try lookupVariable(name: expr.name, expr: expr) ?? nil
+  }
+
+  private func lookupVariable(name: Token, expr: Expr) throws -> Object? {
+    if let distance = locals[expr.id] {
+      return environment.get(at: distance, name)
+    } else {
+      return try globals.get(name)
+    }
   }
 
   public func visitCallExpr(_ expr: Ast.Expression.Call) throws -> Object {
@@ -102,9 +116,13 @@ public class Interpreter: ExprVisitor, StmtVisitor {
     return try callable.call(self, arguments: arguments, token: expr.paren)
   }
 
-  public func visitAssignmentExpr(_ expr: Ast.Expression.Assignment) throws -> Object {
+  public func visitAssignExpr(_ expr: Ast.Expression.Assign) throws -> Object {
     let value = try evaluate(expr.value)
-    try environment.assign(name: expr.name, value: value)
+    if let distance = locals[expr.id] {
+      environment.assign(at: distance, name: expr.name, value: value)
+    } else {
+      try globals.assign(name: expr.name, value: value)
+    }
     return value
   }
 

@@ -1,4 +1,5 @@
 // auto-generated, do not edit
+import Foundation
 import LoxScanner
 
 public protocol StmtVisitor {
@@ -15,6 +16,7 @@ public protocol StmtVisitor {
 
 public extension Ast.Statement {
   struct Block: Stmt {
+    public let id = UUID()
     public let statements: [Stmt]
 
     public init(statements: [Stmt]) {
@@ -27,6 +29,7 @@ public extension Ast.Statement {
   }
 
   struct Expression: Stmt {
+    public let id = UUID()
     public let expression: Expr
 
     public init(expression: Expr) {
@@ -39,6 +42,7 @@ public extension Ast.Statement {
   }
 
   struct Function: Stmt {
+    public let id = UUID()
     public let name: Token
     public let params: [Token]
     public let body: [Stmt]
@@ -55,6 +59,7 @@ public extension Ast.Statement {
   }
 
   struct If: Stmt {
+    public let id = UUID()
     public let condition: Expr
     public let thenBranch: Stmt
     public let elseBranch: Stmt?
@@ -71,6 +76,7 @@ public extension Ast.Statement {
   }
 
   struct Print: Stmt {
+    public let id = UUID()
     public let expression: Expr
 
     public init(expression: Expr) {
@@ -83,6 +89,7 @@ public extension Ast.Statement {
   }
 
   struct Return: Stmt {
+    public let id = UUID()
     public let keyword: Token
     public let value: Expr?
 
@@ -97,6 +104,7 @@ public extension Ast.Statement {
   }
 
   struct Var: Stmt {
+    public let id = UUID()
     public let name: Token
     public let initializer: Expr?
 
@@ -111,6 +119,7 @@ public extension Ast.Statement {
   }
 
   struct While: Stmt {
+    public let id = UUID()
     public let condition: Expr
     public let body: Stmt
 
@@ -123,4 +132,4 @@ public extension Ast.Statement {
       try visitor.visitWhileStmt(self)
     }
   }
-}
+} 

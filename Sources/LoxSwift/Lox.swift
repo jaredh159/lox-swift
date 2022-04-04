@@ -77,6 +77,12 @@ import LoxScanner
     }
 
     let statements = parser.parse()
+    let resolver = Resolver(interpreter: interpreter, errorHandler: Lox.reportResolverError(_:))
+    try? resolver.resolve(statements)
+    if hadError {
+      return
+    }
+
     if let runtimeError = interpreter.interpret(statements) {
       hadRuntimeError = true
       print(runtimeError.message)
@@ -89,6 +95,10 @@ import LoxScanner
 
   public static func reportParserError(_ error: Parser.Error) {
     report(.parserError(error))
+  }
+
+  public static func reportResolverError(_ error: Resolver.Error) {
+    report(.resolverError(error))
   }
 
   private static func report(_ error: Lox.Error) {
@@ -108,6 +118,7 @@ extension Lox {
     case noFileAtPath(String)
     case scannerError(LoxScanner.Scanner.Error)
     case parserError(Parser.Error)
+    case resolverError(Resolver.Error)
   }
 
   enum ExitCode: Int32 {
@@ -139,6 +150,12 @@ extension Lox.Error: LocalizedError {
       return "Parser Error: excess arguments (max 255) at \(line):\(col)"
     case .parserError(.excessParameters(let line, let col)):
       return "Parser Error: excess parameters (max 255) at \(line):\(col)"
+    case .resolverError(.selfReferencingInitializer(let name, let line, let col)):
+      return "Resolver Error: can't read local variable `\(name)` in its own initializer at \(line):\(col)"
+    case .resolverError(.duplicateVariable(let name, let line, let col)):
+      return "Resolver Error: duplicate variable `\(name)` in this scope at \(line):\(col)"
+    case .resolverError(.topLevelReturn(let line, let col)):
+      return "Resolver Error: can't `return` from top-level code at \(line):\(col)"
     }
   }
 
@@ -150,7 +167,7 @@ extension Lox.Error: LocalizedError {
     switch self {
     case .noFileAtPath:
       return .errNoInput
-    case .scannerError, .parserError:
+    case .scannerError, .parserError, .resolverError:
       return .errInput
     }
   }

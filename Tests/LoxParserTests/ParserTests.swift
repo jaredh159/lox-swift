@@ -37,7 +37,7 @@ final class ParserTests: XCTestCase {
 
   func testAssignmentExpression() throws {
     let exprStmt = assertSingleStmt(from: "x = 3;", is: S.Expression.self)
-    let assign = assert(exprStmt.expression, is: E.Assignment.self)
+    let assign = assert(exprStmt.expression, is: E.Assign.self)
     XCTAssertEqual(assign.name.meta.lexeme, "x")
     assert(assign.value, isLiteral: 3)
   }
@@ -115,7 +115,7 @@ final class ParserTests: XCTestCase {
     let printStmt = assert(whileBody.statements.first, is: S.Print.self)
     assert(printStmt.expression, isVar: "i")
     let assign = assert(whileBody.statements.last, is: S.Expression.self)
-    let incr = assert(assign.expression, is: E.Assignment.self)
+    let incr = assert(assign.expression, is: E.Assign.self)
     XCTAssertEqual(incr.name.meta.lexeme, "i")
     let assignExpr = assert(incr.value, is: E.Binary.self)
     assert(assignExpr.left, isVar: "i")

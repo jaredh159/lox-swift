@@ -13,7 +13,7 @@ import Foundation
 
   static func main() {
     defineAst(baseName: "Expression", types: [
-      .init("Assignment", ("name", "Token"), ("value", "Expr")),
+      .init("Assign", ("name", "Token"), ("value", "Expr")),
       .init("Binary", ("left", "Expr"), ("operator", "Token"), ("right", "Expr")),
       .init("Call", ("callee", "Expr"), ("paren", "Token"), ("arguments", "[Expr]")),
       .init("Grouping", ("expression", "Expr")),
@@ -47,6 +47,7 @@ import Foundation
 
     let code = """
     // auto-generated, do not edit
+    import Foundation
     import LoxScanner
 
     public protocol \(proto(from: baseName))Visitor {
@@ -87,6 +88,7 @@ import Foundation
 
     return """
     struct \(type.name): \(typeProto) {
+        public let id = UUID()
         \(propDecls)
 
         public init(\(initParams)) {

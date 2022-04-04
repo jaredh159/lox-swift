@@ -1,5 +1,5 @@
 public extension Ast {
-  enum Literal: Equatable {
+  enum Literal: Equatable, Hashable {
     case string(String)
     case number(Double)
     case boolean(Bool)

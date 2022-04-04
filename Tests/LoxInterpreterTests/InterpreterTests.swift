@@ -1,9 +1,8 @@
-import XCTest
-
 import LoxAst
 import LoxInterpreter
 import LoxParser
 import LoxScanner
+import XCTest
 
 final class InterpreterTests: XCTestCase {
 
@@ -85,30 +84,26 @@ final class InterpreterTests: XCTestCase {
   }
 }
 
-private func interpret(_ input: String) -> RuntimeError? {
-  Interpreter().interpret(statements(from: input))
+private func interpret(_ input: String, testCase: StaticString = #fileID) -> RuntimeError? {
+  let interpreter = Interpreter()
+  let resolver = Resolver(interpreter: interpreter, errorHandler: { err in
+    fatalError("\(testCase) Resolver error for input: `\(input)`, err: \(String(describing: err))")
+  })
+  let statements = statements(from: input)
+  try! resolver.resolve(statements)
+  return interpreter.interpret(statements)
 }
 
 private func eval(_ input: String) -> Result<Object, RuntimeError> {
   let statements = statements(from: input)
+  let interpreter = Interpreter()
+  let resolver = Resolver(interpreter: interpreter, errorHandler: { print($0) })
+  try! resolver.resolve(statements)
   let exprStatement = statements[0] as! Ast.Statement.Expression
   let expr = exprStatement.expression
-  let interpreter = Interpreter()
   do {
     return .success(try interpreter.evaluate(expr))
   } catch {
     return .failure(error as! RuntimeError)
   }
-}
-
-private func statements(from input: String) -> [Stmt] {
-  let scanner = LoxScanner.Scanner(
-    source: input,
-    onError: { e in fatalError(e.localizedDescription) }
-  )
-  let parser = Parser(
-    tokens: scanner.getTokens(),
-    onError: { err in fatalError("Interpreter tests error for input: `\(input)`, err: \(err)") }
-  )
-  return parser.parse()
 }

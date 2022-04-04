@@ -190,7 +190,7 @@ public class Parser {
       let equals = previous
       let value = try assignment()
       if let varExpr = expr as? E.Variable {
-        return E.Assignment(name: varExpr.name, value: value)
+        return E.Assign(name: varExpr.name, value: value)
       } else {
         error(.invalidAssignmentTarget(line: equals.meta.line, column: equals.meta.column))
       }

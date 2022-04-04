@@ -33,8 +33,8 @@ public extension Ast {
       fatalError("RpnVisitor.visitVariableExpr(_:) not implemented")
     }
 
-    public func visitAssignmentExpr(_ expr: Ast.Expression.Assignment) throws {
-      fatalError("RpnVisitor.visitAssignmentExpr(_:) not implemented")
+    public func visitAssignExpr(_ expr: Ast.Expression.Assign) throws {
+      fatalError("RpnVisitor.visitAssignExpr(_:) not implemented")
     }
 
     public func visitLogicalExpr(_ expr: Ast.Expression.Logical) throws {

@@ -1,9 +1,9 @@
 import Foundation
 import Rainbow
 
-public enum Token: Equatable {
+public enum Token: Equatable, Hashable {
 
-  public struct Meta: Equatable {
+  public struct Meta: Equatable, Hashable {
     public let lexeme: String
     public let line: Int
     public let column: Int

@@ -1,9 +1,10 @@
 // auto-generated, do not edit
+import Foundation
 import LoxScanner
 
 public protocol ExprVisitor {
   associatedtype ER
-  func visitAssignmentExpr(_ expr: Ast.Expression.Assignment) throws -> ER
+  func visitAssignExpr(_ expr: Ast.Expression.Assign) throws -> ER
   func visitBinaryExpr(_ expr: Ast.Expression.Binary) throws -> ER
   func visitCallExpr(_ expr: Ast.Expression.Call) throws -> ER
   func visitGroupingExpr(_ expr: Ast.Expression.Grouping) throws -> ER
@@ -14,7 +15,8 @@ public protocol ExprVisitor {
 }
 
 public extension Ast.Expression {
-  struct Assignment: Expr {
+  struct Assign: Expr {
+    public let id = UUID()
     public let name: Token
     public let value: Expr
 
@@ -24,11 +26,12 @@ public extension Ast.Expression {
     }
 
     public func accept<V: ExprVisitor>(visitor: V) throws -> V.ER {
-      try visitor.visitAssignmentExpr(self)
+      try visitor.visitAssignExpr(self)
     }
   }
 
   struct Binary: Expr {
+    public let id = UUID()
     public let left: Expr
     public let `operator`: Token
     public let right: Expr
@@ -45,6 +48,7 @@ public extension Ast.Expression {
   }
 
   struct Call: Expr {
+    public let id = UUID()
     public let callee: Expr
     public let paren: Token
     public let arguments: [Expr]
@@ -61,6 +65,7 @@ public extension Ast.Expression {
   }
 
   struct Grouping: Expr {
+    public let id = UUID()
     public let expression: Expr
 
     public init(expression: Expr) {
@@ -73,6 +78,7 @@ public extension Ast.Expression {
   }
 
   struct Literal: Expr {
+    public let id = UUID()
     public let value: Ast.Literal
 
     public init(value: Ast.Literal) {
@@ -85,6 +91,7 @@ public extension Ast.Expression {
   }
 
   struct Logical: Expr {
+    public let id = UUID()
     public let left: Expr
     public let `operator`: Token
     public let right: Expr
@@ -101,6 +108,7 @@ public extension Ast.Expression {
   }
 
   struct Unary: Expr {
+    public let id = UUID()
     public let `operator`: Token
     public let right: Expr
 
@@ -115,6 +123,7 @@ public extension Ast.Expression {
   }
 
   struct Variable: Expr {
+    public let id = UUID()
     public let name: Token
 
     public init(name: Token) {

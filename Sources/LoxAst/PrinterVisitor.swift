@@ -37,8 +37,8 @@ public extension Ast {
       fatalError("PrinterVisitor.visitVariableExpr(_:) not implemented")
     }
 
-    public func visitAssignmentExpr(_ expr: Ast.Expression.Assignment) throws -> String {
-      fatalError("PrinterVisitor.visitAssignmentExpr(_:) not implemented")
+    public func visitAssignExpr(_ expr: Ast.Expression.Assign) throws -> String {
+      fatalError("PrinterVisitor.visitAssignExpr(_:) not implemented")
     }
 
     public func visitLogicalExpr(_ expr: Ast.Expression.Logical) throws -> String {

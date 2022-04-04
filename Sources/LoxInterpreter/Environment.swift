@@ -30,6 +30,28 @@ public class Environment {
     }
   }
 
+  public func assign(at distance: Int, name: Token, value: Object) {
+    ancestor(at: distance).values[name.meta.lexeme] = value
+  }
+
+  public func get(at distance: Int, _ token: Token) -> Object? {
+    let object = ancestor(at: distance).values[token.meta.lexeme]
+    switch object {
+    case .some(.some(let object)):
+      return object
+    case .some(.none), .none:
+      return nil
+    }
+  }
+
+  private func ancestor(at distance: Int) -> Environment {
+    var environment = self
+    for _ in 0 ..< distance {
+      environment = environment.enclosing!
+    }
+    return environment
+  }
+
   public func get(_ token: Token) throws -> Object? {
     let name = token.meta.lexeme
     let object = values[name]
