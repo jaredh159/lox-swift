@@ -9,24 +9,15 @@ private typealias S = Ast.Statement
 
 final class ParserTests: XCTestCase {
 
-  func testBinaryExpr() throws {
-    let expr = assertSingleStmt(from: "1 < 2;", is: S.Expression.self).expression
-    let binary = assert(expr, is: E.Binary.self)
-    assert(binary.left, isLiteral: 1)
-    assert(binary.right, isLiteral: 2)
-    XCTAssertEqual(binary.operator.type, .less)
-    XCTAssertEqual(try Ast.PrinterVisitor().eval(expr), "(< 1 2)")
-  }
-
   func testVarDeclNoInitializer() throws {
     let varStmt = assertSingleStmt(from: "var x;", is: S.Var.self)
     XCTAssertNil(varStmt.initializer)
-    XCTAssertEqual(varStmt.name.meta.lexeme, "x")
+    XCTAssertEqual(varStmt.name.lexeme, "x")
   }
 
   func testVarDeclWithInitializer() throws {
     let varStmt = assertSingleStmt(from: "var x = 3 + 3;", is: S.Var.self)
-    XCTAssertEqual(varStmt.name.meta.lexeme, "x")
+    XCTAssertEqual(varStmt.name.lexeme, "x")
     assert(varStmt.initializer, is: E.Binary.self)
   }
 
@@ -38,7 +29,7 @@ final class ParserTests: XCTestCase {
   func testAssignmentExpression() throws {
     let exprStmt = assertSingleStmt(from: "x = 3;", is: S.Expression.self)
     let assign = assert(exprStmt.expression, is: E.Assign.self)
-    XCTAssertEqual(assign.name.meta.lexeme, "x")
+    XCTAssertEqual(assign.name.lexeme, "x")
     assert(assign.value, isLiteral: 3)
   }
 
@@ -103,7 +94,7 @@ final class ParserTests: XCTestCase {
     )
     XCTAssertEqual(outerBlock.statements.count, 2)
     let initializer = assert(outerBlock.statements.first, is: S.Var.self)
-    XCTAssertEqual(initializer.name.meta.lexeme, "i")
+    XCTAssertEqual(initializer.name.lexeme, "i")
     assert(initializer.initializer!, isLiteral: 0)
     let whileStmt = assert(outerBlock.statements.last, is: S.While.self)
     let comparison = assert(whileStmt.condition, is: E.Binary.self)
@@ -116,7 +107,7 @@ final class ParserTests: XCTestCase {
     assert(printStmt.expression, isVar: "i")
     let assign = assert(whileBody.statements.last, is: S.Expression.self)
     let incr = assert(assign.expression, is: E.Assign.self)
-    XCTAssertEqual(incr.name.meta.lexeme, "i")
+    XCTAssertEqual(incr.name.lexeme, "i")
     let assignExpr = assert(incr.value, is: E.Binary.self)
     assert(assignExpr.left, isVar: "i")
     XCTAssertEqual(assignExpr.operator.type, .plus)
@@ -147,15 +138,15 @@ final class ParserTests: XCTestCase {
     let funDecl = assertSingleStmt(from: "fun foo() {}", is: S.Function.self)
     XCTAssertEqual(funDecl.params.count, 0)
     XCTAssertEqual(funDecl.body.count, 0)
-    XCTAssertEqual(funDecl.name.meta.lexeme, "foo")
+    XCTAssertEqual(funDecl.name.lexeme, "foo")
   }
 
   func testFunctionDeclWithParamsAndBody() {
     let funDecl = assertSingleStmt(from: "fun bar(x, y) { print x + y; }", is: S.Function.self)
-    XCTAssertEqual(funDecl.name.meta.lexeme, "bar")
+    XCTAssertEqual(funDecl.name.lexeme, "bar")
     XCTAssertEqual(funDecl.params.count, 2)
-    XCTAssertEqual(funDecl.params[0].meta.lexeme, "x")
-    XCTAssertEqual(funDecl.params[1].meta.lexeme, "y")
+    XCTAssertEqual(funDecl.params[0].lexeme, "x")
+    XCTAssertEqual(funDecl.params[1].lexeme, "y")
     XCTAssertEqual(funDecl.body.count, 1)
     let printStmt = assert(funDecl.body.first, is: S.Print.self)
     let binary = assert(printStmt.expression, is: E.Binary.self)
@@ -168,8 +159,44 @@ final class ParserTests: XCTestCase {
     let funDecl = assertSingleStmt(from: "fun foo() { return 1; }", is: S.Function.self)
     XCTAssertEqual(funDecl.body.count, 1)
     let returnStmt = assert(funDecl.body.first!, is: S.Return.self)
-    XCTAssertEqual(returnStmt.keyword.meta.lexeme, "return")
+    XCTAssertEqual(returnStmt.keyword.lexeme, "return")
     assert(returnStmt.value!, isLiteral: 1)
+  }
+
+  func testClassDecl() {
+    let input = """
+    class Breakfast {
+      cook() {
+        print "eggs a-fryin'!";
+      }
+    }
+    """
+    let classDecl = assertSingleStmt(from: input, is: S.Class.self)
+    XCTAssertEqual(classDecl.name.lexeme, "Breakfast")
+    XCTAssertEqual(classDecl.methods.count, 1)
+    let method = assert(classDecl.methods.first!, is: S.Function.self)
+    XCTAssertEqual(method.params.count, 0)
+    XCTAssertEqual(method.body.count, 1)
+    XCTAssertEqual(method.name.lexeme, "cook")
+    let printStmt = assert(method.body.first!, is: S.Print.self)
+    assert(printStmt.expression, isLiteral: "eggs a-fryin'!")
+  }
+
+  func testSetExpr() {
+    let exprStmt = assertSingleStmt(from: "foo.bar = 1;", is: S.Expression.self)
+    let setExpr = assert(exprStmt.expression, is: E.Set.self)
+    assert(setExpr.object, isVar: "foo")
+    XCTAssertEqual(setExpr.name.lexeme, "bar")
+    assert(setExpr.value, isLiteral: 1)
+  }
+
+  func testGetExpr() {
+    let exprStmt = assertSingleStmt(from: "foo.bar();", is: S.Expression.self)
+    let callExp = assert(exprStmt.expression, is: E.Call.self)
+    XCTAssertEqual(callExp.arguments.count, 0)
+    let getExpr = assert(callExp.callee, is: E.Get.self)
+    assert(getExpr.object, isVar: "foo")
+    XCTAssertEqual(getExpr.name.lexeme, "bar")
   }
 }
 
@@ -193,7 +220,7 @@ private func assert(_ expr: Expr, isLiteral expected: Ast.Literal) {
 
 private func assert(_ expr: Expr, isVar expected: String) {
   let variable = assert(expr, is: E.Variable.self)
-  XCTAssertEqual(variable.name.meta.lexeme, expected)
+  XCTAssertEqual(variable.name.lexeme, expected)
 }
 
 private func assertSingleStmt<Expected>(

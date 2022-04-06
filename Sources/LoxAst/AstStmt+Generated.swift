@@ -5,6 +5,7 @@ import LoxScanner
 public protocol StmtVisitor {
   associatedtype SR
   func visitBlockStmt(_ stmt: Ast.Statement.Block) throws -> SR
+  func visitClassStmt(_ stmt: Ast.Statement.Class) throws -> SR
   func visitExpressionStmt(_ stmt: Ast.Statement.Expression) throws -> SR
   func visitFunctionStmt(_ stmt: Ast.Statement.Function) throws -> SR
   func visitIfStmt(_ stmt: Ast.Statement.If) throws -> SR
@@ -25,6 +26,21 @@ public extension Ast.Statement {
 
     public func accept<V: StmtVisitor>(visitor: V) throws -> V.SR {
       try visitor.visitBlockStmt(self)
+    }
+  }
+
+  struct Class: Stmt {
+    public let id = UUID()
+    public let name: Token
+    public let methods: [Ast.Statement.Function]
+
+    public init(name: Token, methods: [Ast.Statement.Function]) {
+      self.name = name
+      self.methods = methods
+    }
+
+    public func accept<V: StmtVisitor>(visitor: V) throws -> V.SR {
+      try visitor.visitClassStmt(self)
     }
   }
 

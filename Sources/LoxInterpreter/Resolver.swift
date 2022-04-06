@@ -37,19 +37,19 @@ public class Resolver: StmtVisitor, ExprVisitor {
     guard let scope = scopes.peek else {
       return
     }
-    if scope.value[name.meta.lexeme] != nil {
+    if scope.value[name.lexeme] != nil {
       reportError(.duplicateVariable(
-        name: name.meta.lexeme,
-        line: name.meta.line,
-        col: name.meta.column
+        name: name.lexeme,
+        line: name.line,
+        col: name.column
       ))
     }
-    scope.value[name.meta.lexeme] = false
+    scope.value[name.lexeme] = false
   }
 
   private func define(_ name: Token) {
     if let scope = scopes.peek {
-      scope.value[name.meta.lexeme] = true
+      scope.value[name.lexeme] = true
     }
   }
 
@@ -65,6 +65,11 @@ public class Resolver: StmtVisitor, ExprVisitor {
     beginScope()
     try resolve(stmt.statements)
     endScope()
+  }
+
+  public func visitClassStmt(_ stmt: Ast.Statement.Class) throws {
+    declare(stmt.name)
+    define(stmt.name)
   }
 
   public func visitExpressionStmt(_ stmt: Ast.Statement.Expression) throws {
@@ -102,7 +107,7 @@ public class Resolver: StmtVisitor, ExprVisitor {
 
   public func visitReturnStmt(_ stmt: Ast.Statement.Return) throws {
     if currentFunction == .none {
-      reportError(.topLevelReturn(line: stmt.keyword.meta.line, col: stmt.keyword.meta.column))
+      reportError(.topLevelReturn(line: stmt.keyword.line, col: stmt.keyword.column))
     }
     try stmt.value.map { try resolve($0) }
   }
@@ -133,6 +138,10 @@ public class Resolver: StmtVisitor, ExprVisitor {
     try expr.arguments.forEach { try resolve($0) }
   }
 
+  public func visitGetExpr(_ expr: Ast.Expression.Get) throws {
+    try resolve(expr.object)
+  }
+
   public func visitGroupingExpr(_ expr: Ast.Expression.Grouping) throws {
     try resolve(expr.expression)
   }
@@ -144,16 +153,21 @@ public class Resolver: StmtVisitor, ExprVisitor {
     try resolve(expr.right)
   }
 
+  public func visitSetExpr(_ expr: Ast.Expression.Set) throws {
+    try resolve(expr.value)
+    try resolve(expr.object)
+  }
+
   public func visitUnaryExpr(_ expr: Ast.Expression.Unary) throws {
     try resolve(expr.right)
   }
 
   public func visitVariableExpr(_ expr: Ast.Expression.Variable) throws {
-    if let scope = scopes.peek, scope[expr.name.meta.lexeme] == false {
+    if let scope = scopes.peek, scope[expr.name.lexeme] == false {
       reportError(.selfReferencingInitializer(
-        name: expr.name.meta.lexeme,
-        line: expr.name.meta.line,
-        col: expr.name.meta.column
+        name: expr.name.lexeme,
+        line: expr.name.line,
+        col: expr.name.column
       ))
     }
     resolveLocal(expr: expr, name: expr.name)
@@ -161,7 +175,7 @@ public class Resolver: StmtVisitor, ExprVisitor {
 
   private func resolveLocal(expr: Expr, name: Token) {
     for (i, scope) in scopes.items.enumerated().reversed() {
-      if scope[name.meta.lexeme] != nil {
+      if scope[name.lexeme] != nil {
         interpreter.resolve(expr: expr, depth: scopes.count - 1 - i)
       }
     }

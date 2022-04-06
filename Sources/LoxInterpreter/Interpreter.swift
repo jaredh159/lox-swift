@@ -38,6 +38,12 @@ public class Interpreter: ExprVisitor, StmtVisitor {
     try evaluate(stmt.expression)
   }
 
+  public func visitClassStmt(_ stmt: Ast.Statement.Class) throws {
+    environment.define(name: stmt.name.lexeme, value: nil)
+    let klass = LoxClass(name: stmt.name.lexeme)
+    try environment.assign(name: stmt.name, value: .class(klass))
+  }
+
   public func visitPrintStmt(_ stmt: Ast.Statement.Print) throws {
     let value = try evaluate(stmt.expression)
     print(value.toString)
@@ -63,9 +69,9 @@ public class Interpreter: ExprVisitor, StmtVisitor {
   public func visitVarStmt(_ stmt: Ast.Statement.Var) throws {
     if let initializer = stmt.initializer {
       let value = try evaluate(initializer)
-      environment.define(name: stmt.name.meta.lexeme, value: .some(value))
+      environment.define(name: stmt.name.lexeme, value: .some(value))
     } else {
-      environment.define(name: stmt.name.meta.lexeme, value: .some(nil))
+      environment.define(name: stmt.name.lexeme, value: .some(nil))
     }
   }
 
@@ -79,7 +85,7 @@ public class Interpreter: ExprVisitor, StmtVisitor {
 
   public func visitFunctionStmt(_ stmt: Ast.Statement.Function) throws {
     let function = UserFunction(stmt, environment: environment)
-    environment.define(name: stmt.name.meta.lexeme, value: .callable(function))
+    environment.define(name: stmt.name.lexeme, value: .callable(function))
   }
 
   public func visitReturnStmt(_ stmt: Ast.Statement.Return) throws {
@@ -110,10 +116,22 @@ public class Interpreter: ExprVisitor, StmtVisitor {
     for argument in expr.arguments {
       arguments.append(try evaluate(argument))
     }
-    guard case .callable(let callable) = callee else {
+    switch callee {
+    case .callable(let callable):
+      return try callable.call(self, arguments: arguments, token: expr.paren)
+    case .class(let constructor):
+      return try constructor.call(self, arguments: arguments, token: expr.paren)
+    default:
       throw RuntimeError(.invalidCallable, expr.paren)
     }
-    return try callable.call(self, arguments: arguments, token: expr.paren)
+  }
+
+  public func visitGetExpr(_ expr: Ast.Expression.Get) throws -> Object {
+    let object = try evaluate(expr.object)
+    guard case .instance(let instance) = object else {
+      throw RuntimeError(.invalidPropertyAccess, expr.name)
+    }
+    return try instance.get(name: expr.name)
   }
 
   public func visitAssignExpr(_ expr: Ast.Expression.Assign) throws -> Object {
@@ -134,6 +152,16 @@ public class Interpreter: ExprVisitor, StmtVisitor {
       return lhs
     }
     return try evaluate(expr.right)
+  }
+
+  public func visitSetExpr(_ expr: Ast.Expression.Set) throws -> Object {
+    let object = try evaluate(expr.object)
+    guard case .instance(let instance) = object else {
+      throw RuntimeError(.invalidPropertyAccess, expr.name)
+    }
+    let value = try evaluate(expr.value)
+    instance.set(name: expr.name, value: value)
+    return value
   }
 
   public func visitBinaryExpr(_ expr: Ast.Expression.Binary) throws -> Object {

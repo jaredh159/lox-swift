@@ -82,6 +82,16 @@ final class InterpreterTests: XCTestCase {
       }
     }
   }
+
+  func testGetSetInstanceFields() throws {
+    let input = """
+    class Foo {}
+    var foo = Foo();
+    foo.bar = 1;
+    assertEqual(foo.bar, 1);
+    """
+    XCTAssertNil(interpret(input))
+  }
 }
 
 private func interpret(_ input: String, testCase: StaticString = #fileID) -> RuntimeError? {

@@ -2,7 +2,6 @@ import Foundation
 import Rainbow
 
 public enum Token: Equatable, Hashable {
-
   public struct Meta: Equatable, Hashable {
     public let lexeme: String
     public let line: Int
@@ -13,6 +12,18 @@ public enum Token: Equatable, Hashable {
       self.line = line
       self.column = column
     }
+  }
+
+  public var lexeme: String {
+    meta.lexeme
+  }
+
+  public var line: Int {
+    meta.line
+  }
+
+  public var column: Int {
+    meta.column
   }
 
   // single character tokens
@@ -69,7 +80,7 @@ public enum Token: Equatable, Hashable {
 
 extension Token: CustomStringConvertible {
   public var description: String {
-    return "\(type.string) \(meta.lexeme)"
+    "\(type.string) \(meta.lexeme)"
   }
 }
 

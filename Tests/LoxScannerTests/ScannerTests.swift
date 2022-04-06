@@ -253,16 +253,16 @@ func assertToken(
   )
 
   XCTAssertEqual(
-    expected.meta.line,
-    actual.meta.line,
+    expected.line,
+    actual.line,
     "lines don't match",
     file: file,
     line: line
   )
 
   XCTAssertEqual(
-    expected.meta.column,
-    actual.meta.column,
+    expected.column,
+    actual.column,
     "columns don't match",
     file: file,
     line: line

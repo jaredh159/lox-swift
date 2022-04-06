@@ -35,6 +35,7 @@ public class Parser {
 
   private func declaration() throws -> Stmt? {
     do {
+      if match(.class) { return try classDeclaration() }
       if match(.fun) { return try function(.function) }
       if match(.var) { return try varDeclaration() }
       return try statement()
@@ -44,14 +45,26 @@ public class Parser {
     }
   }
 
-  private func function(_ kind: FunctionKind) throws -> Stmt {
+  private func classDeclaration() throws -> Stmt {
+    let name = try consume(expected: .identifier, "expected class name")
+    try consume(expected: .leftBrace, "expected `{` before class body")
+    var methods: [S.Function] = []
+
+    while !peekIs(.rightBrace), !isAtEnd {
+      methods.append(try function(.method))
+    }
+    try consume(expected: .rightBrace, "expected `}` after class body")
+    return S.Class(name: name, methods: methods)
+  }
+
+  private func function(_ kind: FunctionKind) throws -> S.Function {
     let name = try consume(expected: .identifier, "expected \(kind) name")
     try consume(expected: .leftParen, "expected '(' after \(kind) name")
     var parameters: [Token] = []
     if !peekIs(.rightParen) {
       repeat {
         if parameters.count >= 255 {
-          error(.excessParameters(line: peek.meta.line, column: peek.meta.column))
+          error(.excessParameters(line: peek.line, column: peek.column))
         }
         parameters.append(try consume(expected: .identifier, "expected parameter name"))
 
@@ -191,8 +204,10 @@ public class Parser {
       let value = try assignment()
       if let varExpr = expr as? E.Variable {
         return E.Assign(name: varExpr.name, value: value)
+      } else if let getExpr = expr as? E.Get {
+        return E.Set(object: getExpr.object, name: getExpr.name, value: value)
       } else {
-        error(.invalidAssignmentTarget(line: equals.meta.line, column: equals.meta.column))
+        error(.invalidAssignmentTarget(line: equals.line, column: equals.column))
       }
     }
     return expr
@@ -272,6 +287,9 @@ public class Parser {
     while true {
       if match(.leftParen) {
         expr = try finishCall(expr)
+      } else if match(.dot) {
+        let name = try consume(expected: .identifier, "expected property name after `.`")
+        expr = E.Get(object: expr, name: name)
       } else {
         break
       }
@@ -284,7 +302,7 @@ public class Parser {
     if !peekIs(.rightParen) {
       repeat {
         if arguments.count >= 255 {
-          error(.excessArguments(line: peek.meta.line, column: peek.meta.column))
+          error(.excessArguments(line: peek.line, column: peek.column))
         }
         arguments.append(try expression())
       } while match(.comma)
@@ -320,7 +338,7 @@ public class Parser {
       return E.Grouping(expression: expr)
     }
 
-    throw error(.expectedExpression(line: peek.meta.line, column: peek.meta.column))
+    throw error(.expectedExpression(line: peek.line, column: peek.column))
   }
 
   private func synchronize() {
@@ -372,8 +390,7 @@ public class Parser {
   @discardableResult
   private func consume(expected type: TokenType, _ message: String) throws -> Token {
     if peekIs(type) { return advance() }
-    let meta = peek.meta
-    throw error(.expectedToken(type: type, message: message, line: meta.line, column: meta.column))
+    throw error(.expectedToken(type: type, message: message, line: peek.line, column: peek.column))
   }
 
   @discardableResult

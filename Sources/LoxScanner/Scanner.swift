@@ -239,5 +239,5 @@ private func isAlpha(_ ch: Character?) -> Bool {
 }
 
 private func isAlphaNumeric(_ ch: Character?) -> Bool {
-  return isAlpha(ch) || isDigit(ch)
+  isAlpha(ch) || isDigit(ch)
 }

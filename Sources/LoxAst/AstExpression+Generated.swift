@@ -7,9 +7,11 @@ public protocol ExprVisitor {
   func visitAssignExpr(_ expr: Ast.Expression.Assign) throws -> ER
   func visitBinaryExpr(_ expr: Ast.Expression.Binary) throws -> ER
   func visitCallExpr(_ expr: Ast.Expression.Call) throws -> ER
+  func visitGetExpr(_ expr: Ast.Expression.Get) throws -> ER
   func visitGroupingExpr(_ expr: Ast.Expression.Grouping) throws -> ER
   func visitLiteralExpr(_ expr: Ast.Expression.Literal) throws -> ER
   func visitLogicalExpr(_ expr: Ast.Expression.Logical) throws -> ER
+  func visitSetExpr(_ expr: Ast.Expression.Set) throws -> ER
   func visitUnaryExpr(_ expr: Ast.Expression.Unary) throws -> ER
   func visitVariableExpr(_ expr: Ast.Expression.Variable) throws -> ER
 }
@@ -64,6 +66,21 @@ public extension Ast.Expression {
     }
   }
 
+  struct Get: Expr {
+    public let id = UUID()
+    public let object: Expr
+    public let name: Token
+
+    public init(object: Expr, name: Token) {
+      self.object = object
+      self.name = name
+    }
+
+    public func accept<V: ExprVisitor>(visitor: V) throws -> V.ER {
+      try visitor.visitGetExpr(self)
+    }
+  }
+
   struct Grouping: Expr {
     public let id = UUID()
     public let expression: Expr
@@ -104,6 +121,23 @@ public extension Ast.Expression {
 
     public func accept<V: ExprVisitor>(visitor: V) throws -> V.ER {
       try visitor.visitLogicalExpr(self)
+    }
+  }
+
+  struct Set: Expr {
+    public let id = UUID()
+    public let object: Expr
+    public let name: Token
+    public let value: Expr
+
+    public init(object: Expr, name: Token, value: Expr) {
+      self.object = object
+      self.name = name
+      self.value = value
+    }
+
+    public func accept<V: ExprVisitor>(visitor: V) throws -> V.ER {
+      try visitor.visitSetExpr(self)
     }
   }
 

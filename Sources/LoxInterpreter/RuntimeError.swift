@@ -4,6 +4,8 @@ public struct RuntimeError: Error, Equatable {
   public enum ErrorType: Equatable {
     case invalidUnaryMinusOperand(Object)
     case invalidBinaryOperands(lhs: Object, operator: Token.TokenType, rhs: Object)
+    case invalidPropertyAccess
+    case undefinedProperty
     case undefinedVariable(String)
     case functionArity(expected: Int, recieved: Int, name: String?)
     case assertEqualFailure(actual: Object, expected: Object)
@@ -21,10 +23,14 @@ public struct RuntimeError: Error, Equatable {
   public var message: String {
     let typeError: String
     switch type {
+    case .invalidPropertyAccess:
+      typeError = "invalid property lookup on non-instance `\(token.lexeme)`"
+    case .undefinedProperty:
+      typeError = "undefined property `\(token.lexeme)`"
     case .invalidUnaryMinusOperand(let operand):
-      typeError = "invalid operand to unary minus: \(operand.toString)"
+      typeError = "invalid operand to unary minus: `\(operand.toString)`"
     case .invalidBinaryOperands(lhs: _, operator: let op, rhs: _):
-      typeError = "invalid binary operands for operator \(op.string)"
+      typeError = "invalid binary operands for operator `\(op.string)`"
     case .undefinedVariable(let name):
       typeError = "undefined variable `\(name)`"
     case .functionArity(expected: let expected, recieved: let received, name: let name):
@@ -34,9 +40,9 @@ public struct RuntimeError: Error, Equatable {
       typeError = "can only call functions and classes"
     case .assertEqualFailure(actual: let actual, expected: let expected):
       typeError =
-        "assertEqual failed - \(actual.toString) is not equal to expected \(expected.toString)"
+        "assertEqual failed - `\(actual.toString)` is not equal to expected `\(expected.toString)`"
     }
-    return "Error at \(token.meta.line):\(token.meta.column): \(typeError)"
+    return "Error at \(token.line):\(token.column): \(typeError)"
   }
 }
 

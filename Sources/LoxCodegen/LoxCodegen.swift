@@ -16,14 +16,17 @@ import Foundation
       .init("Assign", ("name", "Token"), ("value", "Expr")),
       .init("Binary", ("left", "Expr"), ("operator", "Token"), ("right", "Expr")),
       .init("Call", ("callee", "Expr"), ("paren", "Token"), ("arguments", "[Expr]")),
+      .init("Get", ("object", "Expr"), ("name", "Token")),
       .init("Grouping", ("expression", "Expr")),
       .init("Literal", ("value", "Ast.Literal")),
       .init("Logical", ("left", "Expr"), ("operator", "Token"), ("right", "Expr")),
+      .init("Set", ("object", "Expr"), ("name", "Token"), ("value", "Expr")),
       .init("Unary", ("operator", "Token"), ("right", "Expr")),
       .init("Variable", ("name", "Token")),
     ])
     defineAst(baseName: "Stmt", types: [
       .init("Block", ("statements", "[Stmt]")),
+      .init("Class", ("name", "Token"), ("methods", "[Ast.Statement.Function]")),
       .init("Expression", ("expression", "Expr")),
       .init("Function", ("name", "Token"), ("params", "[Token]"), ("body", "[Stmt]")),
       .init("If", ("condition", "Expr"), ("thenBranch", "Stmt"), ("elseBranch", "Stmt?")),
@@ -65,7 +68,7 @@ import Foundation
   }
 
   private static func visitorFuncs(for types: [AstType], baseName: String) -> String {
-    return types
+    types
       .map {
         "func visit\($0.name)\(proto(from: baseName))(_ \(proto(from: baseName).lowercased()): Ast.\(astSubType(from: baseName)).\($0.name)) throws -> \(visitorAssociatedType(from: baseName))"
       }

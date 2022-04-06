@@ -19,7 +19,7 @@ class Stack<Element> {
 
   @discardableResult
   func pop() -> Reference<Element>? {
-    return items.popLast()
+    items.popLast()
   }
 }
 

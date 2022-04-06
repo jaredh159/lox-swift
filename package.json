@@ -8,7 +8,8 @@
     "start": "watchexec --restart --watch Sources --exts swift --signal SIGINT swift build",
     "start:tests": "watchexec --restart --watch Sources --watch Tests --exts swift --signal SIGINT swift test",
     "repl": "swift run LoxSwift",
-    "codegen": "swift run LoxCodegen"
+    "codegen": "swift run LoxCodegen",
+    "format": "swiftformat --swiftversion 5.5 ."
   },
   "keywords": [],
   "author": "",
