@@ -34,8 +34,8 @@ public class Environment {
     ancestor(at: distance).values[name.meta.lexeme] = value
   }
 
-  public func get(at distance: Int, _ token: Token) -> Object? {
-    let object = ancestor(at: distance).values[token.meta.lexeme]
+  public func get(at distance: Int, _ name: String) -> Object? {
+    let object = ancestor(at: distance).values[name]
     switch object {
     case .some(.some(let object)):
       return object

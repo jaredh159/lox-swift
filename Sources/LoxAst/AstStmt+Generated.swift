@@ -32,10 +32,12 @@ public extension Ast.Statement {
   struct Class: Stmt {
     public let id = UUID()
     public let name: Token
+    public let superclass: Ast.Expression.Variable?
     public let methods: [Ast.Statement.Function]
 
-    public init(name: Token, methods: [Ast.Statement.Function]) {
+    public init(name: Token, superclass: Ast.Expression.Variable?, methods: [Ast.Statement.Function]) {
       self.name = name
+      self.superclass = superclass
       self.methods = methods
     }
 

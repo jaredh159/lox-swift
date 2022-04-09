@@ -12,6 +12,7 @@ public protocol ExprVisitor {
   func visitLiteralExpr(_ expr: Ast.Expression.Literal) throws -> ER
   func visitLogicalExpr(_ expr: Ast.Expression.Logical) throws -> ER
   func visitSetExpr(_ expr: Ast.Expression.Set) throws -> ER
+  func visitThisExpr(_ expr: Ast.Expression.This) throws -> ER
   func visitUnaryExpr(_ expr: Ast.Expression.Unary) throws -> ER
   func visitVariableExpr(_ expr: Ast.Expression.Variable) throws -> ER
 }
@@ -138,6 +139,19 @@ public extension Ast.Expression {
 
     public func accept<V: ExprVisitor>(visitor: V) throws -> V.ER {
       try visitor.visitSetExpr(self)
+    }
+  }
+
+  struct This: Expr {
+    public let id = UUID()
+    public let keyword: Token
+
+    public init(keyword: Token) {
+      self.keyword = keyword
+    }
+
+    public func accept<V: ExprVisitor>(visitor: V) throws -> V.ER {
+      try visitor.visitThisExpr(self)
     }
   }
 

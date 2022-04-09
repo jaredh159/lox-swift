@@ -16,6 +16,9 @@ public class Instance {
     if let object = fields[name.lexeme] {
       return object
     }
+    if let method = self.class.find(method: name.lexeme) {
+      return .callable(method.bind(to: self))
+    }
     throw RuntimeError(.undefinedProperty, name)
   }
 

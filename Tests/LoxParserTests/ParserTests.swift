@@ -169,17 +169,36 @@ final class ParserTests: XCTestCase {
       cook() {
         print "eggs a-fryin'!";
       }
+
+      returnThis() {
+        return this;
+      }
     }
     """
     let classDecl = assertSingleStmt(from: input, is: S.Class.self)
     XCTAssertEqual(classDecl.name.lexeme, "Breakfast")
-    XCTAssertEqual(classDecl.methods.count, 1)
-    let method = assert(classDecl.methods.first!, is: S.Function.self)
-    XCTAssertEqual(method.params.count, 0)
-    XCTAssertEqual(method.body.count, 1)
-    XCTAssertEqual(method.name.lexeme, "cook")
-    let printStmt = assert(method.body.first!, is: S.Print.self)
+    XCTAssertEqual(classDecl.methods.count, 2)
+    let cookMethod = assert(classDecl.methods.first!, is: S.Function.self)
+    XCTAssertEqual(cookMethod.params.count, 0)
+    XCTAssertEqual(cookMethod.body.count, 1)
+    XCTAssertEqual(cookMethod.name.lexeme, "cook")
+    let printStmt = assert(cookMethod.body.first!, is: S.Print.self)
     assert(printStmt.expression, isLiteral: "eggs a-fryin'!")
+    let returnThisMethod = assert(classDecl.methods.last!, is: S.Function.self)
+    XCTAssertEqual(returnThisMethod.params.count, 0)
+    XCTAssertEqual(returnThisMethod.body.count, 1)
+    XCTAssertEqual(returnThisMethod.name.lexeme, "returnThis")
+    let returnStmt = assert(returnThisMethod.body.first!, is: S.Return.self)
+    assert(returnStmt.value, is: E.This.self)
+  }
+
+  func testSubClassDecl() {
+    let input = """
+    class Cruller < Donut {}
+    """
+    let classDecl = assertSingleStmt(from: input, is: S.Class.self)
+    XCTAssertEqual(classDecl.name.lexeme, "Cruller")
+    assert(classDecl.superclass!, isVar: "Donut")
   }
 
   func testSetExpr() {

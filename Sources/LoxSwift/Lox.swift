@@ -156,6 +156,12 @@ extension Lox.Error: LocalizedError {
       return "Resolver Error: duplicate variable `\(name)` in this scope at \(line):\(col)"
     case .resolverError(.topLevelReturn(let line, let col)):
       return "Resolver Error: can't `return` from top-level code at \(line):\(col)"
+    case .resolverError(.invalidThisReference(let line, let col)):
+      return "Resolver Error: can't use `this` outside of class at \(line):\(col)"
+    case .resolverError(.invalidInitializerReturn(let line, let col)):
+      return "Resolver Error: can't return a value from initializer at \(line):\(col)"
+    case .resolverError(.selfReferencingInheritance(let line, let col)):
+      return "Resolver Error: can't inherit from self at \(line):\(col)"
     }
   }
 

@@ -32,6 +32,38 @@ final class ResolverTests: XCTestCase {
   func testTopLevelReturnErrors() throws {
     try expectResolutionError("return 1;", .topLevelReturn(line: 1, col: 1))
   }
+
+  func testSelfReferencingInheritanceErrors() throws {
+    try expectResolutionError(
+      "class Foo < Foo {}",
+      .selfReferencingInheritance(line: 1, col: 13)
+    )
+  }
+
+  func testInvalidThis() throws {
+    try expectResolutionError("print this;", .invalidThisReference(line: 1, col: 7))
+    try expectResolutionError(
+      """
+      fun notAMethod() {
+        print this;
+      }
+      """,
+      .invalidThisReference(line: 2, col: 9)
+    )
+  }
+
+  func testInvalidInitializerReturn() throws {
+    try expectResolutionError(
+      """
+      class Foo {
+        init() {
+          return "something else";
+        }
+      } 
+      """,
+      .invalidInitializerReturn(line: 3, col: 5)
+    )
+  }
 }
 
 // helpers
@@ -60,7 +92,7 @@ func statements(from input: String, testCase: StaticString = #fileID) -> [Stmt] 
     tokens: scanner.getTokens(),
     onError: { err in
       fatalError(
-        "\(testCase) Parse error for input: `\(input)`, err: \(String(describing: err))"
+        "\(testCase) Parse error for input:\n\n```\n\(input)\n```\n\n\(String(describing: err))\n\n"
       )
     }
   )

@@ -9,12 +9,20 @@ public class Resolver: StmtVisitor, ExprVisitor {
   private enum FunctionType: Equatable {
     case none
     case function
+    case initializer
+    case method
+  }
+
+  private enum ClassType: Equatable {
+    case none
+    case `class`
   }
 
   private let reportError: (Error) -> Void
   private let interpreter: Interpreter
   private var scopes = Stack<[String: Bool]>()
   private var currentFunction = FunctionType.none
+  private var currentClass = ClassType.none
 
   public init(interpreter: Interpreter, errorHandler: @escaping (Error) -> Void) {
     self.interpreter = interpreter
@@ -68,8 +76,31 @@ public class Resolver: StmtVisitor, ExprVisitor {
   }
 
   public func visitClassStmt(_ stmt: Ast.Statement.Class) throws {
+    let enclosingClass = currentClass
+    currentClass = .class
+
     declare(stmt.name)
     define(stmt.name)
+
+    if stmt.superclass?.name.lexeme == stmt.name.lexeme {
+      let token = stmt.superclass!.name
+      reportError(.selfReferencingInheritance(line: token.line, col: token.column))
+    }
+
+    if let superclass = stmt.superclass {
+      try resolve(superclass)
+    }
+
+    beginScope()
+    scopes.peek!.value["this"] = true
+
+    for method in stmt.methods {
+      let type: FunctionType = method.name.lexeme == "init" ? .initializer : .method
+      try resolveFunction(method, type)
+    }
+
+    endScope()
+    currentClass = enclosingClass
   }
 
   public func visitExpressionStmt(_ stmt: Ast.Statement.Expression) throws {
@@ -109,7 +140,13 @@ public class Resolver: StmtVisitor, ExprVisitor {
     if currentFunction == .none {
       reportError(.topLevelReturn(line: stmt.keyword.line, col: stmt.keyword.column))
     }
-    try stmt.value.map { try resolve($0) }
+    guard let value = stmt.value else {
+      return
+    }
+    if currentFunction == .initializer {
+      reportError(.invalidInitializerReturn(line: stmt.keyword.line, col: stmt.keyword.column))
+    }
+    try resolve(value)
   }
 
   public func visitVarStmt(_ stmt: Ast.Statement.Var) throws {
@@ -158,6 +195,14 @@ public class Resolver: StmtVisitor, ExprVisitor {
     try resolve(expr.object)
   }
 
+  public func visitThisExpr(_ expr: Ast.Expression.This) throws {
+    guard currentClass != .none else {
+      reportError(.invalidThisReference(line: expr.keyword.line, col: expr.keyword.column))
+      return
+    }
+    resolveLocal(expr: expr, name: expr.keyword)
+  }
+
   public func visitUnaryExpr(_ expr: Ast.Expression.Unary) throws {
     try resolve(expr.right)
   }
@@ -189,5 +234,8 @@ public extension Resolver {
     case selfReferencingInitializer(name: String, line: Int, col: Int)
     case duplicateVariable(name: String, line: Int, col: Int)
     case topLevelReturn(line: Int, col: Int)
+    case invalidThisReference(line: Int, col: Int)
+    case invalidInitializerReturn(line: Int, col: Int)
+    case selfReferencingInheritance(line: Int, col: Int)
   }
 }

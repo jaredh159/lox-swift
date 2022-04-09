@@ -47,6 +47,13 @@ public class Parser {
 
   private func classDeclaration() throws -> Stmt {
     let name = try consume(expected: .identifier, "expected class name")
+
+    var superclass: E.Variable?
+    if match(.less) {
+      try consume(expected: .identifier, "expected superclass name")
+      superclass = E.Variable(name: previous)
+    }
+
     try consume(expected: .leftBrace, "expected `{` before class body")
     var methods: [S.Function] = []
 
@@ -54,7 +61,7 @@ public class Parser {
       methods.append(try function(.method))
     }
     try consume(expected: .rightBrace, "expected `}` after class body")
-    return S.Class(name: name, methods: methods)
+    return S.Class(name: name, superclass: superclass, methods: methods)
   }
 
   private func function(_ kind: FunctionKind) throws -> S.Function {
@@ -326,6 +333,10 @@ public class Parser {
       default:
         preconditionFailure()
       }
+    }
+
+    if match(.this) {
+      return E.This(keyword: previous)
     }
 
     if match(.identifier) {

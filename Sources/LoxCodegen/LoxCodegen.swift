@@ -21,12 +21,18 @@ import Foundation
       .init("Literal", ("value", "Ast.Literal")),
       .init("Logical", ("left", "Expr"), ("operator", "Token"), ("right", "Expr")),
       .init("Set", ("object", "Expr"), ("name", "Token"), ("value", "Expr")),
+      .init("This", ("keyword", "Token")),
       .init("Unary", ("operator", "Token"), ("right", "Expr")),
       .init("Variable", ("name", "Token")),
     ])
     defineAst(baseName: "Stmt", types: [
       .init("Block", ("statements", "[Stmt]")),
-      .init("Class", ("name", "Token"), ("methods", "[Ast.Statement.Function]")),
+      .init(
+        "Class",
+        ("name", "Token"),
+        ("superclass", "Ast.Expression.Variable?"),
+        ("methods", "[Ast.Statement.Function]")
+      ),
       .init("Expression", ("expression", "Expr")),
       .init("Function", ("name", "Token"), ("params", "[Token]"), ("body", "[Stmt]")),
       .init("If", ("condition", "Expr"), ("thenBranch", "Stmt"), ("elseBranch", "Stmt?")),

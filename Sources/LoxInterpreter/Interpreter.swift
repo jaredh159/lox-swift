@@ -39,8 +39,26 @@ public class Interpreter: ExprVisitor, StmtVisitor {
   }
 
   public func visitClassStmt(_ stmt: Ast.Statement.Class) throws {
+    var superclass: LoxClass?
+    if let stmtSuperclass = stmt.superclass {
+      let superObj = try evaluate(stmtSuperclass)
+      if case .class(let klass) = superObj {
+        superclass = klass
+      } else {
+        throw RuntimeError(.invalidSuperclass(stmtSuperclass.name.lexeme), stmtSuperclass.name)
+      }
+    }
+
     environment.define(name: stmt.name.lexeme, value: nil)
-    let klass = LoxClass(name: stmt.name.lexeme)
+    var methods: [String: UserFunction] = [:]
+    for method in stmt.methods {
+      methods[method.name.lexeme] = UserFunction(
+        method,
+        environment: environment,
+        isInitializer: method.name.lexeme == "init"
+      )
+    }
+    let klass = LoxClass(name: stmt.name.lexeme, superclass: superclass, methods: methods)
     try environment.assign(name: stmt.name, value: .class(klass))
   }
 
@@ -104,7 +122,7 @@ public class Interpreter: ExprVisitor, StmtVisitor {
 
   private func lookupVariable(name: Token, expr: Expr) throws -> Object? {
     if let distance = locals[expr.id] {
-      return environment.get(at: distance, name)
+      return environment.get(at: distance, name.lexeme)
     } else {
       return try globals.get(name)
     }
@@ -162,6 +180,10 @@ public class Interpreter: ExprVisitor, StmtVisitor {
     let value = try evaluate(expr.value)
     instance.set(name: expr.name, value: value)
     return value
+  }
+
+  public func visitThisExpr(_ expr: Ast.Expression.This) throws -> Object {
+    try lookupVariable(name: expr.keyword, expr: expr) ?? nil
   }
 
   public func visitBinaryExpr(_ expr: Ast.Expression.Binary) throws -> Object {

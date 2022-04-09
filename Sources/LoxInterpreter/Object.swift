@@ -54,7 +54,7 @@ extension Object: Equatable {
     case (.boolean(let a), .boolean(let b)):
       return a == b
     case (.class(let a), .class(let b)):
-      return a == b
+      return a === b
     case (.instance(let a), .instance(let b)):
       return a === b
     case (.callable(let a), .callable(let b)):

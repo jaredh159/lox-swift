@@ -6,20 +6,38 @@ import XCTest
 
 final class InterpreterTests: XCTestCase {
 
+  func testBoundMethods() {
+    assertNoRuntimeError("""
+    class Person {
+      getName() {
+        return this.name;
+      }
+    }
+
+    var jane = Person();
+    jane.name = "Jane";
+
+    var bill = Person();
+    bill.name = "Bill";
+
+    bill.getName = jane.getName;
+    assertEqual(bill.getName(), "Jane");
+    """)
+  }
+
   func testWeirdScopeEdgeCase() throws {
-    let input = """
+    assertNoRuntimeError("""
     var a = "global";
     {
       fun testA() {
-        assertEqual(a, "global");
+        assertEqual(a, "global"); // 👋
       }
 
       testA();
       var a = "block";
       testA();
     }
-    """
-    XCTAssertNil(interpret(input))
+    """)
   }
 
   func testEvaluatingExpressions() throws {
@@ -84,20 +102,112 @@ final class InterpreterTests: XCTestCase {
   }
 
   func testGetSetInstanceFields() throws {
-    let input = """
+    assertNoRuntimeError("""
     class Foo {}
     var foo = Foo();
     foo.bar = 1;
     assertEqual(foo.bar, 1);
-    """
-    XCTAssertNil(interpret(input))
+    """)
+  }
+
+  func testCallClassMethods() throws {
+    assertNoRuntimeError("""
+    class Bacon {
+      eat() {
+        return "crunch crunch";
+      }
+    } 
+    assertEqual(Bacon().eat(), "crunch crunch");
+    """)
+  }
+
+  func testThisBinding() throws {
+    assertNoRuntimeError("""
+    class Cake {
+      taste() {
+        var adjective = "delicious";
+        return "The " + this.flavor + " cake is " + adjective + "!";
+      }
+    }
+
+    var cake = Cake();
+    cake.flavor = "German chocolate";
+    assertEqual(cake.taste(), "The German chocolate cake is delicious!");
+    """)
+  }
+
+  func testThisBindingEdgeCase() throws {
+    assertNoRuntimeError("""
+    class Thing {
+      getCallback() {
+        fun localFunction() {
+          return this.name;
+        }
+
+        return localFunction;
+      }
+    }
+
+    var thing = Thing();
+    thing.name = "Bob";
+    var callback = thing.getCallback();
+    assertEqual(callback(), "Bob");
+    """)
+  }
+
+  func testClassInitReturnsThis() throws {
+    assertNoRuntimeError("""
+    class Foo {
+      init() {}
+    } 
+    var foo = Foo();
+    foo.bar = "bar";
+    assertEqual(foo.init().bar, "bar");
+    """)
+  }
+
+  func testClassInitCanReturnEarly() throws {
+    assertNoRuntimeError("""
+    class Foo {
+      init() {
+        return;
+      }
+    } 
+    var foo = Foo();
+    foo.bar = "bar";
+    assertEqual(foo.init().bar, "bar");
+    """)
+  }
+
+  func testNonClassSuperclassIsRuntimeError() throws {
+    assertRuntimeError(
+      """
+      var NotAClass = "I am totally not a class";
+      class Subclass < NotAClass {} 
+      """,
+      .invalidSuperclass("NotAClass")
+    )
+  }
+
+  func testClassInheritance() throws {
+    assertNoRuntimeError("""
+    class Parent {
+      one() {
+        return 1;
+      }
+    }
+    class Child < Parent {}
+    assertEqual(Child().one(), 1);
+    """)
   }
 }
 
 private func interpret(_ input: String, testCase: StaticString = #fileID) -> RuntimeError? {
   let interpreter = Interpreter()
   let resolver = Resolver(interpreter: interpreter, errorHandler: { err in
-    fatalError("\(testCase) Resolver error for input: `\(input)`, err: \(String(describing: err))")
+    fatalError(
+      "\(testCase) Resolver error for input:\n\n```\n\(input)\n```\n\n\(String(describing: err))\n\n"
+    )
   })
   let statements = statements(from: input)
   try! resolver.resolve(statements)
@@ -116,4 +226,12 @@ private func eval(_ input: String) -> Result<Object, RuntimeError> {
   } catch {
     return .failure(error as! RuntimeError)
   }
+}
+
+private func assertRuntimeError(_ input: String, _ expectedError: RuntimeError.ErrorType) {
+  XCTAssertEqual(interpret(input)?.type, expectedError)
+}
+
+private func assertNoRuntimeError(_ input: String) {
+  XCTAssertNil(interpret(input))
 }

@@ -10,6 +10,7 @@ public struct RuntimeError: Error, Equatable {
     case functionArity(expected: Int, recieved: Int, name: String?)
     case assertEqualFailure(actual: Object, expected: Object)
     case invalidCallable
+    case invalidSuperclass(String)
   }
 
   public let type: ErrorType
@@ -36,6 +37,8 @@ public struct RuntimeError: Error, Equatable {
     case .functionArity(expected: let expected, recieved: let received, name: let name):
       let fnName = name != nil ? "\(name!) " : ""
       typeError = "function \(fnName)expects \(expected) argument/s, recieved \(received)"
+    case .invalidSuperclass(let name):
+      typeError = "superclass `\(name)` is not a class"
     case .invalidCallable:
       typeError = "can only call functions and classes"
     case .assertEqualFailure(actual: let actual, expected: let expected):
