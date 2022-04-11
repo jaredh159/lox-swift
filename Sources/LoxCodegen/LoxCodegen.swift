@@ -21,6 +21,7 @@ import Foundation
       .init("Literal", ("value", "Ast.Literal")),
       .init("Logical", ("left", "Expr"), ("operator", "Token"), ("right", "Expr")),
       .init("Set", ("object", "Expr"), ("name", "Token"), ("value", "Expr")),
+      .init("Super", ("keyword", "Token"), ("method", "Token")),
       .init("This", ("keyword", "Token")),
       .init("Unary", ("operator", "Token"), ("right", "Expr")),
       .init("Variable", ("name", "Token")),

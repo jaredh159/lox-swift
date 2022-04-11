@@ -162,6 +162,10 @@ extension Lox.Error: LocalizedError {
       return "Resolver Error: can't return a value from initializer at \(line):\(col)"
     case .resolverError(.selfReferencingInheritance(let line, let col)):
       return "Resolver Error: can't inherit from self at \(line):\(col)"
+    case .resolverError(.superOutsideClass(let line, let col)):
+      return "Resolver Error: can't use `super` outside of a class at \(line):\(col)"
+    case .resolverError(.superNoSuperclass(let line, let col)):
+      return "Resolver Error: can't user `super` in a class with no superclass at \(line):\(col)"
     }
   }
 

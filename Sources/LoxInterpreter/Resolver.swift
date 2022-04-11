@@ -16,6 +16,7 @@ public class Resolver: StmtVisitor, ExprVisitor {
   private enum ClassType: Equatable {
     case none
     case `class`
+    case subClass
   }
 
   private let reportError: (Error) -> Void
@@ -65,6 +66,10 @@ public class Resolver: StmtVisitor, ExprVisitor {
     scopes.push([:])
   }
 
+  private func beginScope(setting name: String, to value: Bool) {
+    scopes.push([name: value])
+  }
+
   private func endScope() {
     scopes.pop()
   }
@@ -88,11 +93,15 @@ public class Resolver: StmtVisitor, ExprVisitor {
     }
 
     if let superclass = stmt.superclass {
+      currentClass = .subClass
       try resolve(superclass)
     }
 
-    beginScope()
-    scopes.peek!.value["this"] = true
+    if stmt.superclass != nil {
+      beginScope(setting: "super", to: true)
+    }
+
+    beginScope(setting: "this", to: true)
 
     for method in stmt.methods {
       let type: FunctionType = method.name.lexeme == "init" ? .initializer : .method
@@ -100,6 +109,11 @@ public class Resolver: StmtVisitor, ExprVisitor {
     }
 
     endScope()
+
+    if stmt.superclass != nil {
+      endScope()
+    }
+
     currentClass = enclosingClass
   }
 
@@ -195,6 +209,15 @@ public class Resolver: StmtVisitor, ExprVisitor {
     try resolve(expr.object)
   }
 
+  public func visitSuperExpr(_ expr: Ast.Expression.Super) throws {
+    if case .none = currentClass {
+      reportError(.superOutsideClass(line: expr.keyword.line, col: expr.keyword.column))
+    } else if case .class = currentClass {
+      reportError(.superNoSuperclass(line: expr.keyword.line, col: expr.keyword.column))
+    }
+    resolveLocal(expr: expr, name: expr.keyword)
+  }
+
   public func visitThisExpr(_ expr: Ast.Expression.This) throws {
     guard currentClass != .none else {
       reportError(.invalidThisReference(line: expr.keyword.line, col: expr.keyword.column))
@@ -237,5 +260,7 @@ public extension Resolver {
     case invalidThisReference(line: Int, col: Int)
     case invalidInitializerReturn(line: Int, col: Int)
     case selfReferencingInheritance(line: Int, col: Int)
+    case superOutsideClass(line: Int, col: Int)
+    case superNoSuperclass(line: Int, col: Int)
   }
 }

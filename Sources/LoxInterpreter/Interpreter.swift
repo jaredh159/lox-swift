@@ -50,6 +50,11 @@ public class Interpreter: ExprVisitor, StmtVisitor {
     }
 
     environment.define(name: stmt.name.lexeme, value: nil)
+    if let superclass = superclass {
+      environment = Environment(enclosing: environment)
+      environment.define(name: "super", value: .class(superclass))
+    }
+
     var methods: [String: UserFunction] = [:]
     for method in stmt.methods {
       methods[method.name.lexeme] = UserFunction(
@@ -58,7 +63,12 @@ public class Interpreter: ExprVisitor, StmtVisitor {
         isInitializer: method.name.lexeme == "init"
       )
     }
+
     let klass = LoxClass(name: stmt.name.lexeme, superclass: superclass, methods: methods)
+    if superclass != nil, let enclosing = environment.enclosing {
+      environment = enclosing
+    }
+
     try environment.assign(name: stmt.name, value: .class(klass))
   }
 
@@ -180,6 +190,22 @@ public class Interpreter: ExprVisitor, StmtVisitor {
     let value = try evaluate(expr.value)
     instance.set(name: expr.name, value: value)
     return value
+  }
+
+  public func visitSuperExpr(_ expr: Ast.Expression.Super) throws -> Object {
+    guard let distance = locals[expr.id],
+          let superObj = environment.get(at: distance, "super"),
+          case .class(let superclass) = superObj,
+          let instanceObj = environment.get(at: distance - 1, "this"),
+          case .instance(let instance) = instanceObj else {
+      preconditionFailure()
+    }
+
+    guard let method = superclass.find(method: expr.method.lexeme) else {
+      throw RuntimeError(.undefinedProperty, expr.method)
+    }
+
+    return .callable(method.bind(to: instance))
   }
 
   public func visitThisExpr(_ expr: Ast.Expression.This) throws -> Object {

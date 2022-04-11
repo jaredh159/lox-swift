@@ -323,6 +323,13 @@ public class Parser {
     if match(.true) { return E.Literal(value: .boolean(true)) }
     if match(.nil) { return E.Literal(value: .nil) }
 
+    if match(.super) {
+      let keyword = previous
+      try consume(expected: .dot, "expected `.` after `super`")
+      let method = try consume(expected: .identifier, "expected superclass method name")
+      return E.Super(keyword: keyword, method: method)
+    }
+
     if match(any: .number, .string) {
       let token = previous
       switch token {

@@ -2,7 +2,7 @@ import LoxScanner
 
 public class Environment {
   private var values: [String: Object?] = [:]
-  private var enclosing: Environment?
+  public var enclosing: Environment?
 
   public init(enclosing: Environment? = nil) {
     self.enclosing = enclosing

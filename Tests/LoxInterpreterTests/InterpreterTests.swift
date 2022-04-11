@@ -200,6 +200,46 @@ final class InterpreterTests: XCTestCase {
     assertEqual(Child().one(), 1);
     """)
   }
+
+  func testSuperMethodCall() throws {
+    assertNoRuntimeError("""
+    class Parent {
+      one() {
+        return 1;
+      }
+    }
+    class Child < Parent {
+      one() {
+        return super.one() + 2;
+      }
+    }
+    assertEqual(Child().one(), 3);
+    """)
+  }
+
+  func testSuperMethodResolutionEdgeCase() throws {
+    assertNoRuntimeError("""
+    class A {
+      method() {
+        return "A method";
+      }
+    }
+
+    class B < A {
+      method() {
+        return "B method";
+      }
+
+      test() {
+        return super.method();
+      }
+    }
+
+    class C < B {}
+
+    assertEqual(C().test(), "A method");
+    """)
+  }
 }
 
 private func interpret(_ input: String, testCase: StaticString = #fileID) -> RuntimeError? {

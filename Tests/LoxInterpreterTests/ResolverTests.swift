@@ -64,6 +64,29 @@ final class ResolverTests: XCTestCase {
       .invalidInitializerReturn(line: 3, col: 5)
     )
   }
+
+  func testSuperOutsideOfClass() throws {
+    try expectResolutionError(
+      """
+      super.notEvenInAClass();
+      """,
+      .superOutsideClass(line: 1, col: 1)
+    )
+  }
+
+  func testSuperWithoutSuperclass() throws {
+    try expectResolutionError(
+      """
+      class Eclair {
+        cook() {
+          super.cook();
+          print "Pipe full of crème pâtissière.";
+        }
+      }
+      """,
+      .superNoSuperclass(line: 3, col: 5)
+    )
+  }
 }
 
 // helpers

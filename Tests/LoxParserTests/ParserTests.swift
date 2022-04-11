@@ -217,6 +217,13 @@ final class ParserTests: XCTestCase {
     assert(getExpr.object, isVar: "foo")
     XCTAssertEqual(getExpr.name.lexeme, "bar")
   }
+
+  func testSuperExpr() {
+    let exprStmt = assertSingleStmt(from: "super.someMethod;", is: S.Expression.self)
+    let superExp = assert(exprStmt.expression, is: E.Super.self)
+    XCTAssertEqual(superExp.keyword.lexeme, "super")
+    XCTAssertEqual(superExp.method.lexeme, "someMethod")
+  }
 }
 
 // helpers
